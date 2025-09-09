@@ -42,6 +42,7 @@
     .stats{padding:6px 14px;font-size:13px;color:var(--muted)}
     .list{padding:8px 10px 18px;display:grid;gap:10px}
     .card{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .card.oos{opacity:.45;filter:grayscale(100%)}            /* << same as internal */
     .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
     .sku{font-weight:800;font-size:15px}
     .badge{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:700;color:#fff;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
@@ -58,7 +59,7 @@
     .thumb[hidden]{display:none}
     .price{color:var(--accent);font-weight:800}
 
-    /* Traffic light badge colors */
+    /* Traffic light colors */
     .b-red{background:var(--red)}
     .b-orange{background:var(--orange)}
     .b-yellow{background:var(--yellow); color:#111}
@@ -75,6 +76,7 @@
     .detail .topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
     .back{border:none;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;cursor:pointer}
     .detail .head{background:var(--card);border-radius:var(--radius);padding:12px;display:grid;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .detail .head.oos{opacity:.65;filter:grayscale(100%)}     /* << same as internal */
     .detail .hrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
     .detail .title1{font-weight:800}
     .detail .hero{display:flex;gap:14px;align-items:center}
@@ -88,7 +90,6 @@
     /* Blocks (Подробнее/Тех/Лог same style) */
     .block{background:#f9fafb;border:1px solid #eee;border-radius:8px;padding:10px}
     .block pre{white-space:pre-wrap;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-    /* Подробнее list (bullets) */
     .bullets{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;list-style:disc;padding-left:18px;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     .bullets li{margin:0;line-height:1.35}
     @media(max-width:720px){ .bullets{grid-template-columns:1fr} }
@@ -162,10 +163,10 @@
   </div>
 
   <script>
-    // URLs (images from repo root; add_data.csv assumed next to this file)
-    const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
-    const IMAGES_CSV_URL = "../images.csv";      // sku,url
-    const DETAILS_CSV_URL = "./add_data.csv";    // sku,tech,log,marketing,add
+    // Data sources (reuse root files)
+    const XML_URL        = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
+    const IMAGES_CSV_URL = "../images.csv";     // sku,url
+    const DETAILS_CSV_URL= "../add_data.csv";   // sku,tech,log,marketing,add
 
     // Helpers
     function formatTenge(n){ if (isNaN(n)) return n; return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸"; }
@@ -197,9 +198,9 @@
     const tabpanel=document.getElementById("tabpanel");
 
     // Data
-    let OFFERS=[];          // {sku, model, modelLC, stock, price}
-    let IMG_MAP=new Map();  // sku -> url
-    let DETAIL_MAP=new Map(); // sku -> {tech,log,marketing,add}
+    let OFFERS=[];             // {sku, model, modelLC, stock, price}
+    let IMG_MAP=new Map();     // sku -> url
+    let DETAIL_MAP=new Map();  // sku -> {tech,log,marketing,add}
 
     // Traffic light mapping
     function stockBucket(stock){
@@ -296,8 +297,11 @@
           const {label, cls} = stockBucket(o.stock);
           const imgUrl = IMG_MAP.get(o.sku) || "";
           const hasDetails = DETAIL_MAP.has(o.sku);
+
           const card = document.createElement("div");
           card.className = "card";
+          if (o.stock === 0) card.classList.add("oos");    // << gray out like internal
+
           card.innerHTML = `
             <div class="row1">
               <div class="sku">Артикул: ${o.sku}</div>
@@ -347,7 +351,7 @@
       const imgUrl = IMG_MAP.get(sku) || "";
       const {label, cls} = o ? stockBucket(o.stock) : {label:"", cls:""};
 
-      detailHead.className = "head";
+      detailHead.className = "head" + ((o && o.stock===0) ? " oos" : "");  // << gray header like internal
       detailHead.innerHTML = `
         <div class="hrow">
           <div class="title1">${o ? `Артикул: ${o.sku}` : sku}</div>
@@ -401,7 +405,7 @@
       tabpanel.innerHTML = html;
     }
 
-    // Exports (include indicator + details/tech/log/marketing; no numeric stock)
+    // Exports (indicator + details; no numeric stock)
     function exportExcel(rows){
       const out = rows.map(o=>{
         const b = stockBucket(o.stock);
@@ -502,7 +506,7 @@
     });
 
     btnBack.addEventListener("click", ()=>{
-      location.replace("#"); // jump to list immediately
+      location.replace("#");   // jump to list immediately
       renderList();
     });
 
