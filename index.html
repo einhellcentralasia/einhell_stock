@@ -66,13 +66,16 @@
     .tabbtn.active{background:#111;color:#fff;border-color:#111}
     .tabpanel{margin-top:10px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
 
-    /* Highlights as a clean two-column list (no blue pills) */
-    .bullets{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;list-style:disc;padding-left:18px;margin:0}
+    /* Blocks (used by Подробнее/Тех/Лог) */
+    .block{background:#f9fafb;border:1px solid #eee;border-radius:8px;padding:10px}
+    .block pre{white-space:pre-wrap;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    /* Подробнее list styled as a block with bullets */
+    .bullets{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;list-style:disc;padding-left:18px;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     .bullets li{margin:0;line-height:1.35}
     @media(max-width:720px){ .bullets{grid-template-columns:1fr} }
 
     .footer{padding:20px 14px;text-align:center;color:var(--muted);font-size:12px}
-    .error{color:var(--warn);padding:12px 14px}
+    .error{color:#b91c1c;padding:12px 14px}
 
     .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:50}
     .lightbox img{max-width:92vw;max-height:90vh;background:#fff;border-radius:10px;padding:6px}
@@ -299,14 +302,13 @@
     }
 
     function sanitizeBullets(addStr){
-      // Split by |, ;, or newline. Trim, drop empties.
       return (addStr||"")
         .split(/\r?\n|[|;]+/g)
         .map(s=>s.trim())
         .filter(Boolean);
     }
 
-    function renderDetail(sku, tab="highlights"){
+    function renderDetail(sku, tab="details"){
       viewList.hidden=true; viewDetail.hidden=false;
 
       const o = OFFERS.find(x=>x.sku===sku);
@@ -333,7 +335,7 @@
       if (heroImg) heroImg.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
 
       const tabs = [
-        {id:"highlights", label:"Highlights"},
+        {id:"details", label:"Подробнее"},
         {id:"tech", label:"Тех"},
         {id:"log", label:"Лог"},
         {id:"marketing", label:"Маркетинг"}
@@ -345,56 +347,73 @@
         b.textContent=t.label;
         b.addEventListener("click", ()=>{
           const base = `#sku=${encodeURIComponent(sku)}`;
-          // Replace hash instead of pushing (prevents back-button tab cycling)
-          location.replace(t.id==="highlights" ? base : `${base}&tab=${t.id}`);
+          location.replace(t.id==="details" ? base : `${base}&tab=${t.id}`);
         });
         tabsEl.appendChild(b);
       });
 
-      // Tab content
+      // Tab content (blocks look the same across tabs)
       let html = "";
-      if (tab==="highlights"){
+      if (tab==="details"){
         const bullets = sanitizeBullets(d.add);
         html += bullets.length
-          ? `<ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul>`
+          ? `<div class="block"><ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul></div>`
           : `<div class="muted" style="color:#6b7280">Нет кратких пунктов</div>`;
       }
       if (tab==="tech"){
-        html += d.tech ? `<pre class="block" style="white-space:pre-wrap">${d.tech}</pre>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
+        html += d.tech ? `<div class="block"><pre>${d.tech}</pre></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
       }
       if (tab==="log"){
-        html += d.log ? `<pre class="block" style="white-space:pre-wrap">${d.log}</pre>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
+        html += d.log ? `<div class="block"><pre>${d.log}</pre></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
       }
       if (tab==="marketing"){
-        html += d.marketing ? `<div style="white-space:pre-wrap">${d.marketing}</div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
+        html += d.marketing ? `<div class="block" style="background:#fff;border-color:#e5e7eb"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
       }
       tabpanel.innerHTML = html;
     }
 
+    // ---- Exports now include details ----
     function exportExcel(rows){
-      const out = rows.map(o=>({ Артикул:o.sku, Модель:o.model, Остаток:o.stock, Цена:o.price, Изображение: IMG_MAP.get(o.sku)||"" }));
+      const out = rows.map(o=>{
+        const d = DETAIL_MAP.get(o.sku) || {};
+        return {
+          Артикул:o.sku, Модель:o.model, Остаток:o.stock, Цена:o.price,
+          Изображение: IMG_MAP.get(o.sku)||"",
+          Тех: d.tech || "", Лог: d.log || "", Маркетинг: d.marketing || "", Подробнее: d.add || ""
+        };
+      });
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(out);
-      ws["!cols"] = [{wch:12},{wch:50},{wch:10},{wch:12},{wch:60}];
+      ws["!cols"] = [{wch:12},{wch:50},{wch:10},{wch:12},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40}];
       XLSX.utils.book_append_sheet(wb, ws, "Прайс");
       XLSX.writeFile(wb, "einhell_price.xlsx");
     }
     function exportCSV(rows){
-      const header = ["Артикул","Модель","Остаток","Цена","Изображение"];
+      const header = ["Артикул","Модель","Остаток","Цена","Изображение","Тех","Лог","Маркетинг","Подробнее"];
       const lines = [header.map(escCSV).join(",")];
-      for(const o of rows){ lines.push([o.sku, o.model, o.stock, o.price, IMG_MAP.get(o.sku)||""].map(escCSV).join(",")); }
+      for(const o of rows){
+        const d = DETAIL_MAP.get(o.sku) || {};
+        lines.push([
+          o.sku,o.model,o.stock,o.price,IMG_MAP.get(o.sku)||"", d.tech||"", d.log||"", d.marketing||"", d.add||""
+        ].map(escCSV).join(","));
+      }
       downloadBlob("einhell_price.csv", "text/csv;charset=utf-8", lines.join("\n"));
     }
     function exportJSON(rows){
-      const arr = rows.map(o=>({sku:o.sku, model:o.model, stock:o.stock, price:o.price, image: IMG_MAP.get(o.sku)||null}));
+      const arr = rows.map(o=>{
+        const d = DETAIL_MAP.get(o.sku) || {};
+        return {sku:o.sku, model:o.model, stock:o.stock, price:o.price, image: IMG_MAP.get(o.sku)||null,
+                tech:d.tech||"", log:d.log||"", marketing:d.marketing||"", details:d.add||""};
+      });
       downloadBlob("einhell_price.json", "application/json;charset=utf-8", JSON.stringify(arr, null, 2));
     }
     function exportXML(rows){
       const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
       let xml = `<?xml version="1.0" encoding="UTF-8"?><items>`;
       for(const o of rows){
+        const d = DETAIL_MAP.get(o.sku) || {};
         const img = IMG_MAP.get(o.sku)||"";
-        xml += `<item sku="${esc(o.sku)}"><model>${esc(o.model)}</model><stock>${o.stock}</stock><price>${o.price}</price>${img?`<image>${esc(img)}</image>`:""}</item>`;
+        xml += `<item sku="${esc(o.sku)}"><model>${esc(o.model)}</model><stock>${o.stock}</stock><price>${o.price}</price>${img?`<image>${esc(img)}</image>`:""}<tech>${esc(d.tech||"")}</tech><log>${esc(d.log||"")}</log><marketing>${esc(d.marketing||"")}</marketing><details>${esc(d.add||"")}</details></item>`;
       }
       xml += `</items>`;
       downloadBlob("einhell_price.xml", "application/xml;charset=utf-8", xml);
@@ -404,14 +423,14 @@
       const h = location.hash.replace(/^#/,"");
       if (h.includes("sku=")){
         const sp = new URLSearchParams(h);
-        return { sku: sp.get("sku"), tab: (sp.get("tab")||"highlights") };
+        return { sku: sp.get("sku"), tab: (sp.get("tab")||"details") };
       }
       return { sku:null, tab:null };
     }
     function renderRoute(){
       const {sku, tab} = parseHash();
       if (sku){
-        renderDetail(sku, tab||"highlights");
+        renderDetail(sku, tab||"details");
       }else{
         renderList();
       }
@@ -453,9 +472,8 @@
     });
 
     // Detail events
-    btnBack.addEventListener("click", ()=>{
-      // Jump directly to the list view without cycling history
-      location.replace("#"); // replace instead of push
+    document.getElementById("btnBack").addEventListener("click", ()=>{
+      location.replace("#"); // jump to list immediately
       renderList();
     });
 
