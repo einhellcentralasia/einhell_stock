@@ -1,37 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kaspi Stock Viewer</title>
-  <meta name="description" content="Fast mobile stock lookup by SKU or Model" />
+  <title>Остатки Einhell</title>
+  <meta name="description" content="Быстрый поиск остатков по артикулу или модели (Einhell)" />
   <style>
     :root{
-      --brand:#d32f2f; --bg:#ffffff; --card:#f8f9fb; --ink:#1f2937;
-      --muted:#6b7280; --ok:#2e7d32; --warn:#b91c1c; --accent:#1565c0;
+      /* Einhell palette */
+      --brand:#E2001A;   /* Einhell red */
+      --ink:#111111;     /* near-black text */
+      --bg:#ffffff;
+      --card:#f8f9fb;
+      --muted:#6b7280;
+      --ok:#2e7d32;
+      --warn:#b91c1c;
+      --accent:#111111;  /* price in black to match brand */
       --radius:14px;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
-    header{position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;padding:14px 16px 10px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-    header .title{font-weight:700;font-size:18px;letter-spacing:.2px}
-    header .sub{font-size:12px;opacity:.9;margin-top:2px}
+    /* HEADER */
+    header{
+      position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;
+      padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px
+    }
+    .logo{
+      height:28px;width:auto;display:block;background:#fff;padding:4px;border-radius:6px;
+    }
+    .titles{display:flex;flex-direction:column;gap:2px}
+    .title{font-weight:800;font-size:18px;letter-spacing:.2px}
+    .sub{font-size:12px;opacity:.95}
+    /* CONTROLS */
     .controls{padding:10px 12px;display:flex;gap:8px;align-items:center;background:#fff;border-bottom:1px solid #eee}
     .search{flex:1;position:relative}
     .search input{width:100%;padding:12px 40px 12px 12px;font-size:16px;border:1px solid #e5e7eb;border-radius:10px;outline:none}
     .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:18px;cursor:pointer;color:#9ca3af;padding:6px}
     .toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+    /* INFO & LIST */
     .stats{padding:6px 14px;font-size:13px;color:var(--muted)}
     .list{padding:8px 10px 18px;display:grid;gap:10px}
     .card{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
     .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
-    .sku{font-weight:700;font-size:15px}
-    .badge{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:600;color:#fff;white-space:nowrap}
+    .sku{font-weight:800;font-size:15px}
+    .badge{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:700;color:#fff;white-space:nowrap}
     .ok{background:var(--ok)} .no{background:var(--warn)}
     .model{margin:6px 0 8px;font-size:14px}
     .meta{display:flex;gap:16px;font-size:14px}
-    .price{color:var(--accent);font-weight:700}
-    .stock{font-weight:700}
+    .price{color:var(--accent);font-weight:800}
+    .stock{font-weight:800}
     @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
     @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
     .footer{padding:20px 14px;text-align:center;color:var(--muted);font-size:12px}
@@ -40,21 +57,27 @@
 </head>
 <body>
   <header>
-    <div class="title">Kaspi Stock Viewer</div>
-    <div class="sub">Search by <b>SKU</b> or <b>Model</b>. Auto-loads from price.xml.</div>
+    <!-- Upload logo.png into the repo root; if missing, the image auto-hides -->
+    <img class="logo" src="logo.png" alt="Einhell" onerror="this.style.display='none'">
+    <div class="titles">
+      <div class="title">Остатки Einhell</div>
+      <div class="sub">Поиск по артикулу или модели. Данные подгружаются из price.xml автоматически.</div>
+    </div>
   </header>
 
   <div class="controls">
     <div class="search">
-      <input id="q" type="text" placeholder="Type SKU (e.g., 4513812) or Model (e.g., TE-CD 18/40)..." autocomplete="off" />
-      <button class="clear-btn" id="clear" title="Clear">✕</button>
+      <input id="q" type="text"
+        placeholder="Ввести Артикул (например, 4513812) или Модель (например, TE-CD 18/40)…"
+        autocomplete="off" />
+      <button class="clear-btn" id="clear" title="Очистить">✕</button>
     </div>
     <label class="toggle">
-      <input type="checkbox" id="onlyInStock" /> In stock only
+      <input type="checkbox" id="onlyInStock" /> Только в наличии
     </label>
   </div>
 
-  <div class="stats" id="stats">Loading…</div>
+  <div class="stats" id="stats">Загрузка…</div>
   <div class="error" id="error" hidden></div>
   <div class="list" id="list"></div>
   <div class="footer" id="footer"></div>
@@ -69,17 +92,11 @@
       return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸";
     }
     function debounce(fn,ms=120){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
-    // Namespace-agnostic getElementsByTagName using localName match
-    function getByLocalName(node, local){
-      // any namespace:
-      return Array.from(node.getElementsByTagNameNS("*", local));
-    }
-    function firstByLocalName(node, local){
-      const arr = getByLocalName(node, local);
-      return arr.length ? arr[0] : null;
-    }
+    // Namespace-agnostic queries (your XML uses a default namespace)
+    function getByLocalName(node, local){ return Array.from(node.getElementsByTagNameNS("*", local)); }
+    function firstByLocalName(node, local){ const a=getByLocalName(node, local); return a.length?a[0]:null; }
 
-    // DOM
+    // DOM refs
     const q=document.getElementById("q");
     const clearBtn=document.getElementById("clear");
     const onlyInStock=document.getElementById("onlyInStock");
@@ -91,7 +108,7 @@
     let OFFERS=[];
 
     async function fetchXML(){
-      const url = XML_URL + "?t=" + Date.now(); // cache-bust
+      const url = XML_URL + "?t=" + Date.now(); // cache-bust: always fresh from Pages CDN
       const res = await fetch(url,{cache:"no-store"});
       if(!res.ok) throw new Error("HTTP " + res.status);
       const txt = await res.text();
@@ -103,19 +120,14 @@
     function parseOffers(xml){
       const offers = getByLocalName(xml, "offer").map(offer=>{
         const sku = offer.getAttribute("sku") || "";
-
-        const modelTag = firstByLocalName(offer, "model");
-        const model = (modelTag?.textContent || "").trim();
-
+        const model = (firstByLocalName(offer, "model")?.textContent || "").trim();
         const av = firstByLocalName(offer, "availability");
         const available = (av?.getAttribute("available") || "no").toLowerCase()==="yes";
         const stock = Number(av?.getAttribute("stockCount") || "0");
-
-        const priceTag = firstByLocalName(offer, "price");
-        const price = Number((priceTag?.textContent || "0").replace(/[^\d]/g,""));
-
+        const price = Number((firstByLocalName(offer, "price")?.textContent || "0").replace(/[^\d]/g,""));
         return { sku, model, available, stock, price };
       });
+      // Sort: in-stock first, then by stock desc, then model
       return offers.sort((a,b)=>(b.available-a.available)||(b.stock-a.stock)||a.model.localeCompare(b.model));
     }
 
@@ -128,53 +140,53 @@
 
       list.innerHTML="";
       if(!filt.length){
-        list.innerHTML = `<div class="card"><div class="model">No results. Try another SKU/model.</div></div>`;
+        list.innerHTML = `<div class="card"><div class="model">Ничего не найдено. Попробуйте другой артикул или модель.</div></div>`;
       }else{
         for(const o of filt){
           const badgeClass=o.stock>0?"ok":"no";
-          const badgeText=o.stock>0?"In stock":"Out of stock";
+          const badgeText=o.stock>0?"В наличии":"Нет в наличии";
           list.insertAdjacentHTML("beforeend",`
             <div class="card">
               <div class="row1">
-                <div class="sku">SKU: ${o.sku}</div>
+                <div class="sku">Артикул: ${o.sku}</div>
                 <span class="badge ${badgeClass}">${badgeText}</span>
               </div>
               <div class="model">${o.model}</div>
               <div class="meta">
-                <div class="stock">Qty: ${o.stock}</div>
+                <div class="stock">Кол-во: ${o.stock}</div>
                 <div class="price">${formatTenge(o.price)}</div>
               </div>
             </div>
           `);
         }
       }
-      stats.textContent = \`Showing \${filt.length} / \${OFFERS.length} items \${onlyInStock.checked?"(in-stock only)":""}\`;
+      stats.textContent = `Показано ${filt.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}`;
     }
 
     async function init(){
       try{
-        stats.textContent="Loading…";
+        stats.textContent="Загрузка…";
         const xml = await fetchXML();
         OFFERS = parseOffers(xml);
-        if (OFFERS.length === 0){
-          throw new Error("Parsed 0 offers (likely namespace issue)"); // should not happen now
-        }
+        if (OFFERS.length === 0) throw new Error("Parsed 0 offers (namespace?)");
         render();
-        const now = new Date();
-        footer.textContent = "Fetched at " + now.toLocaleString();
+        footer.textContent = "Обновлено: " + new Date().toLocaleString();
         errorBox.hidden = true;
       }catch(err){
         console.error(err);
         errorBox.hidden = false;
-        errorBox.textContent = "Failed to load price.xml: " + err.message;
+        errorBox.textContent = "Не удалось загрузить price.xml: " + err.message;
         stats.textContent = "—";
       }
     }
 
+    // Events
     q.addEventListener("input",debounce(render,80));
     onlyInStock.addEventListener("change",render);
     clearBtn.addEventListener("click",()=>{q.value="";render();q.focus();});
-    setInterval(init,30*60*1000); // refresh every 30 min
+    setInterval(init,30*60*1000); // авто-обновление каждые 30 минут
+
+    // Start
     init();
   </script>
 </body>
