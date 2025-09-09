@@ -60,15 +60,26 @@
   <div class="footer" id="footer"></div>
 
   <script>
-    // Absolute XML URL (separate repo, same origin)
+    // XML lives in the other repo (same origin)
     const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
 
+    // Helpers
     function formatTenge(n){
       if (isNaN(n)) return n;
       return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸";
     }
     function debounce(fn,ms=120){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+    // Namespace-agnostic getElementsByTagName using localName match
+    function getByLocalName(node, local){
+      // any namespace:
+      return Array.from(node.getElementsByTagNameNS("*", local));
+    }
+    function firstByLocalName(node, local){
+      const arr = getByLocalName(node, local);
+      return arr.length ? arr[0] : null;
+    }
 
+    // DOM
     const q=document.getElementById("q");
     const clearBtn=document.getElementById("clear");
     const onlyInStock=document.getElementById("onlyInStock");
@@ -90,13 +101,19 @@
     }
 
     function parseOffers(xml){
-      const offers = Array.from(xml.getElementsByTagName("offer")).map(offer=>{
+      const offers = getByLocalName(xml, "offer").map(offer=>{
         const sku = offer.getAttribute("sku") || "";
-        const model = (offer.getElementsByTagName("model")[0]?.textContent || "").trim();
-        const av = offer.getElementsByTagName("availability")[0];
+
+        const modelTag = firstByLocalName(offer, "model");
+        const model = (modelTag?.textContent || "").trim();
+
+        const av = firstByLocalName(offer, "availability");
         const available = (av?.getAttribute("available") || "no").toLowerCase()==="yes";
         const stock = Number(av?.getAttribute("stockCount") || "0");
-        const price = Number((offer.getElementsByTagName("price")[0]?.textContent || "0").replace(/[^\d]/g,""));
+
+        const priceTag = firstByLocalName(offer, "price");
+        const price = Number((priceTag?.textContent || "0").replace(/[^\d]/g,""));
+
         return { sku, model, available, stock, price };
       });
       return offers.sort((a,b)=>(b.available-a.available)||(b.stock-a.stock)||a.model.localeCompare(b.model));
@@ -139,11 +156,15 @@
         stats.textContent="Loading…";
         const xml = await fetchXML();
         OFFERS = parseOffers(xml);
+        if (OFFERS.length === 0){
+          throw new Error("Parsed 0 offers (likely namespace issue)"); // should not happen now
+        }
         render();
         const now = new Date();
         footer.textContent = "Fetched at " + now.toLocaleString();
         errorBox.hidden = true;
       }catch(err){
+        console.error(err);
         errorBox.hidden = false;
         errorBox.textContent = "Failed to load price.xml: " + err.message;
         stats.textContent = "—";
