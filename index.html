@@ -5,17 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Остатки Einhell</title>
   <meta name="description" content="Быстрый поиск остатков по артикулу или модели (Einhell)" />
+  <!-- SheetJS for Excel export (client-side, no server) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root{
       /* Einhell palette */
-      --brand:#E2001A;   /* Einhell red */
-      --ink:#111111;     /* near-black text */
-      --bg:#ffffff;
-      --card:#f8f9fb;
-      --muted:#6b7280;
-      --ok:#2e7d32;
-      --warn:#b91c1c;
-      --accent:#111111;  /* price in black to match brand */
+      --brand:#E2001A; --ink:#111111; --bg:#ffffff; --card:#f8f9fb;
+      --muted:#6b7280; --ok:#2e7d32; --warn:#b91c1c; --accent:#111111;
       --radius:14px;
     }
     *{box-sizing:border-box}
@@ -25,18 +21,23 @@
       position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;
       padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px
     }
-    .logo{
-      height:28px;width:auto;display:block;background:#fff;padding:4px;border-radius:6px;
-    }
+    .logo{height:28px;width:auto;display:block;background:#fff;padding:4px;border-radius:6px}
     .titles{display:flex;flex-direction:column;gap:2px}
     .title{font-weight:800;font-size:18px;letter-spacing:.2px}
     .sub{font-size:12px;opacity:.95}
+
     /* CONTROLS */
-    .controls{padding:10px 12px;display:flex;gap:8px;align-items:center;background:#fff;border-bottom:1px solid #eee}
-    .search{flex:1;position:relative}
+    .controls{padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border-bottom:1px solid #eee}
+    .search{flex:1 1 260px;position:relative}
     .search input{width:100%;padding:12px 40px 12px 12px;font-size:16px;border:1px solid #e5e7eb;border-radius:10px;outline:none}
     .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:18px;cursor:pointer;color:#9ca3af;padding:6px}
     .toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+    .sort{display:flex;align-items:center;gap:6px}
+    select{padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+
+    .btn{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer}
+    .btn:active{transform:scale(0.99)}
+
     /* INFO & LIST */
     .stats{padding:6px 14px;font-size:13px;color:var(--muted)}
     .list{padding:8px 10px 18px;display:grid;gap:10px}
@@ -46,13 +47,21 @@
     .badge{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:700;color:#fff;white-space:nowrap}
     .ok{background:var(--ok)} .no{background:var(--warn)}
     .model{margin:6px 0 8px;font-size:14px}
-    .meta{display:flex;gap:16px;font-size:14px}
+
+    .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .leftMeta{display:flex;align-items:center;gap:12px}
+    .thumb{width:70px;height:70px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #eee;cursor:pointer}
     .price{color:var(--accent);font-weight:800}
     .stock{font-weight:800}
+
     @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
     @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
     .footer{padding:20px 14px;text-align:center;color:var(--muted);font-size:12px}
     .error{color:var(--warn);padding:12px 14px}
+
+    /* Lightbox */
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:50}
+    .lightbox img{max-width:92vw;max-height:90vh;background:#fff;border-radius:10px;padding:6px}
   </style>
 </head>
 <body>
@@ -75,6 +84,16 @@
     <label class="toggle">
       <input type="checkbox" id="onlyInStock" /> Только в наличии
     </label>
+    <div class="sort">
+      <select id="sortKey" title="Сортировка">
+        <option value="default">Сортировка: по умолчанию</option>
+        <option value="price_desc">Цена ↓</option>
+        <option value="price_asc">Цена ↑</option>
+        <option value="stock_desc">Остаток ↓</option>
+        <option value="stock_asc">Остаток ↑</option>
+      </select>
+    </div>
+    <button class="btn" id="btnExcel" title="Скачать прайс в Excel">Скачать .xlsx</button>
   </div>
 
   <div class="stats" id="stats">Загрузка…</div>
@@ -82,9 +101,16 @@
   <div class="list" id="list"></div>
   <div class="footer" id="footer"></div>
 
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" onclick="this.style.display='none'">
+    <img id="lightboxImg" alt="preview">
+  </div>
+
   <script>
-    // XML lives in the other repo (same origin)
+    // Data URLs
     const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
+    // Optional mapping in THIS repo: images.csv (sku,url)
+    const IMAGES_CSV_URL = "./images.csv";
 
     // Helpers
     function formatTenge(n){
@@ -92,29 +118,56 @@
       return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸";
     }
     function debounce(fn,ms=120){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
-    // Namespace-agnostic queries (your XML uses a default namespace)
     function getByLocalName(node, local){ return Array.from(node.getElementsByTagNameNS("*", local)); }
     function firstByLocalName(node, local){ const a=getByLocalName(node, local); return a.length?a[0]:null; }
 
-    // DOM refs
+    // DOM
     const q=document.getElementById("q");
     const clearBtn=document.getElementById("clear");
     const onlyInStock=document.getElementById("onlyInStock");
+    const sortKey=document.getElementById("sortKey");
+    const btnExcel=document.getElementById("btnExcel");
     const list=document.getElementById("list");
     const stats=document.getElementById("stats");
     const errorBox=document.getElementById("error");
     const footer=document.getElementById("footer");
+    const lightbox=document.getElementById("lightbox");
+    const lightboxImg=document.getElementById("lightboxImg");
 
-    let OFFERS=[];
+    let OFFERS=[];           // parsed XML
+    let IMG_MAP=new Map();   // sku -> url
 
+    async function fetchText(url){
+      const res = await fetch(url + "?t=" + Date.now(), { cache:"no-store" });
+      if(!res.ok) throw new Error("HTTP " + res.status + " for " + url);
+      return res.text();
+    }
     async function fetchXML(){
-      const url = XML_URL + "?t=" + Date.now(); // cache-bust: always fresh from Pages CDN
-      const res = await fetch(url,{cache:"no-store"});
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      const txt = await res.text();
+      const txt = await fetchText(XML_URL);
       const xml = new DOMParser().parseFromString(txt,"application/xml");
       if (xml.querySelector("parsererror")) throw new Error("XML parse error");
       return xml;
+    }
+    async function fetchImagesMap(){
+      try{
+        const csv = await fetchText(IMAGES_CSV_URL);
+        const lines = csv.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+        const [h,...rows] = lines;
+        const idxSku = h.toLowerCase().split(",").indexOf("sku");
+        const idxUrl = h.toLowerCase().split(",").indexOf("url");
+        if(idxSku<0 || idxUrl<0) throw new Error("images.csv must have headers: sku,url");
+        IMG_MAP.clear();
+        for(const r of rows){
+          const parts = r.split(",");
+          const sku = (parts[idxSku]||"").trim();
+          const url = (parts[idxUrl]||"").trim();
+          if(sku && url) IMG_MAP.set(sku, url);
+        }
+      }catch(e){
+        // Optional file; ignore if missing
+        console.warn("images.csv not loaded:", e.message);
+        IMG_MAP.clear();
+      }
     }
 
     function parseOffers(xml){
@@ -127,24 +180,37 @@
         const price = Number((firstByLocalName(offer, "price")?.textContent || "0").replace(/[^\d]/g,""));
         return { sku, model, available, stock, price };
       });
-      // Sort: in-stock first, then by stock desc, then model
-      return offers.sort((a,b)=>(b.available-a.available)||(b.stock-a.stock)||a.model.localeCompare(b.model));
+      return offers;
+    }
+
+    function sortOffers(arr){
+      switch (sortKey.value){
+        case "price_desc": return arr.slice().sort((a,b)=> b.price - a.price);
+        case "price_asc":  return arr.slice().sort((a,b)=> a.price - b.price);
+        case "stock_desc": return arr.slice().sort((a,b)=> b.stock - a.stock);
+        case "stock_asc":  return arr.slice().sort((a,b)=> a.stock - b.stock);
+        default:           return arr.slice().sort((a,b)=>(b.available-a.available)||(b.stock-a.stock)||a.model.localeCompare(b.model));
+      }
     }
 
     function render(){
       const term = q.value.trim().toLowerCase();
-      const filt = OFFERS.filter(o=>{
+      const base = OFFERS.filter(o=>{
         const hit = o.sku.includes(term) || o.model.toLowerCase().includes(term);
         return hit && (!onlyInStock.checked || o.stock>0);
       });
 
+      const data = sortOffers(base);
+
       list.innerHTML="";
-      if(!filt.length){
+      if(!data.length){
         list.innerHTML = `<div class="card"><div class="model">Ничего не найдено. Попробуйте другой артикул или модель.</div></div>`;
       }else{
-        for(const o of filt){
+        for(const o of data){
           const badgeClass=o.stock>0?"ok":"no";
           const badgeText=o.stock>0?"В наличии":"Нет в наличии";
+          const imgUrl = IMG_MAP.get(o.sku) || "";
+
           list.insertAdjacentHTML("beforeend",`
             <div class="card">
               <div class="row1">
@@ -153,20 +219,45 @@
               </div>
               <div class="model">${o.model}</div>
               <div class="meta">
-                <div class="stock">Кол-во: ${o.stock}</div>
+                <div class="leftMeta">
+                  ${imgUrl ? `<img class="thumb" src="${imgUrl}" alt="${o.model}" onclick="showImg('${encodeURI(imgUrl)}')">` : ``}
+                  <div class="stock">Кол-во: ${o.stock}</div>
+                </div>
                 <div class="price">${formatTenge(o.price)}</div>
               </div>
             </div>
           `);
         }
       }
-      stats.textContent = `Показано ${filt.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}`;
+      stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}`;
+    }
+
+    function showImg(url){
+      lightboxImg.src = url;
+      lightbox.style.display='flex';
+    }
+
+    function exportExcel(rows){
+      // build plain objects for XLSX
+      const out = rows.map(o=>({
+        Артикул: o.sku,
+        Модель: o.model,
+        Остаток: o.stock,
+        Цена: o.price
+      }));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(out);
+      // apply simple number formats
+      ws["!cols"] = [{wch:12},{wch:50},{wch:10},{wch:12}];
+      XLSX.utils.book_append_sheet(wb, ws, "Прайс");
+      XLSX.writeFile(wb, "einhell_price.xlsx");
     }
 
     async function init(){
       try{
         stats.textContent="Загрузка…";
-        const xml = await fetchXML();
+        await fetchImagesMap();              // optional; safe if missing
+        const xml = await fetchXML();        // must load
         OFFERS = parseOffers(xml);
         if (OFFERS.length === 0) throw new Error("Parsed 0 offers (namespace?)");
         render();
@@ -175,7 +266,7 @@
       }catch(err){
         console.error(err);
         errorBox.hidden = false;
-        errorBox.textContent = "Не удалось загрузить price.xml: " + err.message;
+        errorBox.textContent = "Не удалось загрузить: " + err.message;
         stats.textContent = "—";
       }
     }
@@ -183,10 +274,19 @@
     // Events
     q.addEventListener("input",debounce(render,80));
     onlyInStock.addEventListener("change",render);
+    sortKey.addEventListener("change",render);
     clearBtn.addEventListener("click",()=>{q.value="";render();q.focus();});
-    setInterval(init,30*60*1000); // авто-обновление каждые 30 минут
+    btnExcel.addEventListener("click",()=>{
+      const term = q.value.trim().toLowerCase();
+      const filt = OFFERS.filter(o=>{
+        const hit = o.sku.includes(term) || o.model.toLowerCase().includes(term);
+        return hit && (!onlyInStock.checked || o.stock>0);
+      });
+      exportExcel(sortOffers(filt));
+    });
 
-    // Start
+    // Auto-refresh every 30 min
+    setInterval(init,30*60*1000);
     init();
   </script>
 </body>
