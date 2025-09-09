@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Остатки Einhell — Публичная версия</title>
+  <meta name="description" content="Публичный просмотр остатков Einhell с индикатором уровня (светофор)" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --brand:#E2001A; --ink:#111111; --bg:#ffffff; --card:#f8f9fb;
+      --muted:#6b7280; --ok:#22C55E; --warn:#E2001A; --accent:#111111;
+      --orange:#F97316; --yellow:#FACC15; --green:#22C55E; --red:#E2001A;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+
+    /* HEADER */
+    header{
+      position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;
+      padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px
+    }
+    .logo{height:28px;width:auto;display:block;background:#fff;padding:4px;border-radius:6px}
+    .titles{display:flex;flex-direction:column;gap:2px}
+    .title{font-weight:800;font-size:18px;letter-spacing:.2px}
+    .sub{font-size:12px;opacity:.95}
+
+    /* CONTROLS */
+    .controls{padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border-bottom:1px solid #eee}
+    .search{flex:1 1 260px;position:relative}
+    .search input{width:100%;padding:12px 40px 12px 12px;font-size:16px;border:1px solid #e5e7eb;border-radius:10px;outline:none}
+    .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:18px;cursor:pointer;color:#9ca3af;padding:6px}
+    .toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+    .sort{display:flex;align-items:center;gap:6px}
+    select{padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+    .btn{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer}
+    .btn:active{transform:scale(0.99)}
+
+    /* LIST */
+    .stats{padding:6px 14px;font-size:13px;color:var(--muted)}
+    .list{padding:8px 10px 18px;display:grid;gap:10px}
+    .card{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .sku{font-weight:800;font-size:15px}
+    .badge{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:700;color:#fff;white-space:nowrap}
+    .badge-dot{display:inline-block;width:8px;height:8px;border-radius:999px;background:currentColor;margin-right:6px;vertical-align:middle}
+
+    .model{margin:6px 0 8px;font-size:14px}
+    .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .leftMeta{display:flex;align-items:center;gap:12px}
+    .thumb{width:70px;height:70px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #eee;cursor:pointer}
+    .thumb[hidden]{display:none}
+    .price{color:var(--accent);font-weight:800}
+
+    /* Traffic light badge colors */
+    .b-red{background:var(--red)}
+    .b-orange{background:var(--orange)}
+    .b-yellow{background:var(--yellow); color:#111}
+    .b-green{background:var(--green)}
+
+    @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
+    @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
+    .footer{padding:20px 14px;text-align:center;color:var(--muted);font-size:12px}
+    .error{color:var(--red);padding:12px 14px}
+
+    /* Lightbox */
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:50}
+    .lightbox img{max-width:92vw;max-height:90vh;background:#fff;border-radius:10px;padding:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="../logo.png" alt="Einhell" onerror="this.style.display='none'">
+    <div class="titles">
+      <div class="title">Остатки Einhell</div>
+      <div class="sub">Публичная версия: «светофор» по остаткам</div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="search">
+      <input id="q" type="text"
+        placeholder="Ввести Артикул (например, 4513812) или Модель (например, TE-CD 18/40)…"
+        autocomplete="off" />
+      <button class="clear-btn" id="clear" title="Очистить">✕</button>
+    </div>
+
+    <label class="toggle">
+      <input type="checkbox" id="onlyInStock" /> Только в наличии
+    </label>
+
+    <label class="toggle">
+      <input type="checkbox" id="showImages" /> Вкл. изображения
+    </label>
+
+    <div class="sort">
+      <select id="sortKey" title="Сортировка">
+        <option value="default">Сортировка: по умолчанию</option>
+        <option value="price_desc">Цена ↓</option>
+        <option value="price_asc">Цена ↑</option>
+        <option value="stock_desc">Остаток ↓</option>
+        <option value="stock_asc">Остаток ↑</option>
+      </select>
+    </div>
+
+    <div class="sort">
+      <select id="downloadFmt" title="Формат выгрузки">
+        <option value="xlsx">Excel (.xlsx)</option>
+        <option value="csv">CSV (.csv)</option>
+        <option value="json">JSON (.json)</option>
+        <option value="xml">XML (.xml)</option>
+      </select>
+      <button class="btn" id="btnDownload">Скачать</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">Загрузка…</div>
+  <div class="error" id="error" hidden></div>
+  <div class="list" id="list"></div>
+  <div class="footer" id="footer"></div>
+
+  <div class="lightbox" id="lightbox" onclick="this.style.display='none'">
+    <img id="lightboxImg" alt="preview">
+  </div>
+
+  <script>
+    // Data URLs
+    const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
+    const IMAGES_CSV_URL = "../images.csv"; // reuse from repo root
+
+    // Helpers
+    function formatTenge(n){ if (isNaN(n)) return n; return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸"; }
+    function debounce(fn,ms=220){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+    function getByLocalName(node, local){ return Array.from(node.getElementsByTagNameNS("*", local)); }
+    function firstByLocalName(node, local){ const a=getByLocalName(node, local); return a.length?a[0]:null; }
+    function escCSV(v){ const s=String(v??""); return /[",;\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
+    function downloadBlob(filename, mime, data){ const blob=new Blob([data],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); }
+
+    // DOM
+    const q=document.getElementById("q");
+    const clearBtn=document.getElementById("clear");
+    const onlyInStock=document.getElementById("onlyInStock");
+    const showImages=document.getElementById("showImages");
+    const sortKey=document.getElementById("sortKey");
+    const downloadFmt=document.getElementById("downloadFmt");
+    const btnDownload=document.getElementById("btnDownload");
+    const list=document.getElementById("list");
+    const stats=document.getElementById("stats");
+    const errorBox=document.getElementById("error");
+    const footer=document.getElementById("footer");
+    const lightbox=document.getElementById("lightbox");
+    const lightboxImg=document.getElementById("lightboxImg");
+
+    let OFFERS=[];         // parsed XML
+    let IMG_MAP=new Map(); // sku -> url
+
+    async function fetchText(url){
+      const res = await fetch(url + "?t=" + Date.now(), { cache:"no-store" });
+      if(!res.ok) throw new Error("HTTP " + res.status + " for " + url);
+      return res.text();
+    }
+    async function fetchXML(){
+      const txt = await fetchText(XML_URL);
+      const xml = new DOMParser().parseFromString(txt,"application/xml");
+      if (xml.querySelector("parsererror")) throw new Error("XML parse error");
+      return xml;
+    }
+    async function fetchImagesMap(){
+      try{
+        const csv = await fetchText(IMAGES_CSV_URL);
+        const lines = csv.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+        const header = lines.shift().toLowerCase();
+        const sep = header.includes(";") ? ";" : ",";
+        const cols = header.split(sep).map(s=>s.trim());
+        const idxSku = cols.indexOf("sku");
+        const idxUrl = cols.indexOf("url");
+        if(idxSku<0 || idxUrl<0) throw new Error("images.csv must have headers: sku,url");
+        IMG_MAP.clear();
+        for(const line of lines){
+          const parts = line.split(sep);
+          const sku = (parts[idxSku]||"").trim();
+          const url = (parts[idxUrl]||"").trim();
+          if(sku && url && url!=="-") IMG_MAP.set(sku, url);
+        }
+      }catch(e){
+        console.warn("images.csv not loaded:", e.message);
+        IMG_MAP.clear();
+      }
+    }
+
+    function parseOffers(xml){
+      const offers = getByLocalName(xml, "offer").map(offer=>{
+        const sku = offer.getAttribute("sku") || "";
+        const model = (firstByLocalName(offer, "model")?.textContent || "").trim();
+        const modelLC = model.toLowerCase();
+        const av = firstByLocalName(offer, "availability");
+        const available = (av?.getAttribute("available") || "no").toLowerCase()==="yes";
+        const stock = Number(av?.getAttribute("stockCount") || "0");
+        const price = Number((firstByLocalName(offer, "price")?.textContent || "0").replace(/[^\d]/g,""));
+        return { sku, model, modelLC, available, stock, price };
+      });
+      return offers;
+    }
+
+    // Traffic light mapping
+    function stockBucket(stock){
+      if (stock <= 0)   return { label:"Нет в наличии", cls:"b-red" };
+      if (stock < 10)  return { label:"Менее 10", cls:"b-orange" };
+      if (stock < 50)  return { label:"Менее 50", cls:"b-yellow" };
+      return { label:"Более 50", cls:"b-green" };
+    }
+
+    function sortOffers(arr){
+      switch (sortKey.value){
+        case "price_desc": return arr.slice().sort((a,b)=> b.price - a.price);
+        case "price_asc":  return arr.slice().sort((a,b)=> a.price - b.price);
+        case "stock_desc": return arr.slice().sort((a,b)=> b.stock - a.stock);
+        case "stock_asc":  return arr.slice().sort((a,b)=> a.stock - b.stock);
+        default:           return arr.slice().sort((a,b)=>(b.available-a.available)||(b.stock-a.stock)||a.model.localeCompare(b.model));
+      }
+    }
+
+    function currentFiltered(){
+      const term = q.value.trim().toLowerCase();
+      return OFFERS.filter(o=>{
+        const hit = o.sku.includes(term) || o.modelLC.includes(term);
+        return hit && (!onlyInStock.checked || o.stock>0);
+      });
+    }
+
+    function render(){
+      const data = sortOffers(currentFiltered());
+      list.innerHTML="";
+      if(!data.length){
+        list.innerHTML = `<div class="card"><div class="model">Ничего не найдено. Попробуйте другой артикул или модель.</div></div>`;
+      }else{
+        const imgsOn = showImages.checked;
+        const frag = document.createDocumentFragment();
+        for(const o of data){
+          const {label, cls} = stockBucket(o.stock);
+          const card = document.createElement("div");
+          card.className = "card";
+          const imgUrl = IMG_MAP.get(o.sku) || "";
+          card.innerHTML = `
+            <div class="row1">
+              <div class="sku">Артикул: ${o.sku}</div>
+              <span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>
+            </div>
+            <div class="model">${o.model}</div>
+            <div class="meta">
+              <div class="leftMeta">
+                ${imgUrl && imgsOn ? `<img class="thumb" loading="lazy" src="${imgUrl}" alt="${o.model}">` : ``}
+              </div>
+              <div class="price">${formatTenge(o.price)}</div>
+            </div>
+          `;
+          if (imgUrl && imgsOn){
+            const img = card.querySelector(".thumb");
+            img.addEventListener("click", ()=>{ document.getElementById('lightboxImg').src = imgUrl; document.getElementById('lightbox').style.display='flex'; });
+          }
+          frag.appendChild(card);
+        }
+        list.appendChild(frag);
+      }
+      stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}${showImages.checked?"":" • изображения скрыты"}`;
+    }
+
+    // Exports (kept same — they include exact numbers, which is fine for your external users if you want it)
+    function exportExcel(rows){
+      const out = rows.map(o=>{
+        const b = stockBucket(o.stock);
+        return { Артикул:o.sku, Модель:o.model, Индикатор:b.label, Цена:o.price, Изображение: IMG_MAP.get(o.sku)||"" };
+      });
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(out);
+      ws["!cols"] = [{wch:12},{wch:50},{wch:14},{wch:12},{wch:60}];
+      XLSX.utils.book_append_sheet(wb, ws, "Прайс");
+      XLSX.writeFile(wb, "einhell_price_public.xlsx");
+    }
+    function exportCSV(rows){
+      const header = ["Артикул","Модель","Индикатор","Цена","Изображение"];
+      const lines = [header.map(escCSV).join(",")];
+      for(const o of rows){
+        const b = stockBucket(o.stock);
+        lines.push([o.sku, o.model, b.label, o.price, IMG_MAP.get(o.sku)||""].map(escCSV).join(","));
+      }
+      downloadBlob("einhell_price_public.csv", "text/csv;charset=utf-8", lines.join("\n"));
+    }
+    function exportJSON(rows){
+      const arr = rows.map(o=>({sku:o.sku, model:o.model, indicator:stockBucket(o.stock).label, price:o.price, image: IMG_MAP.get(o.sku)||null}));
+      downloadBlob("einhell_price_public.json", "application/json;charset=utf-8", JSON.stringify(arr, null, 2));
+    }
+    function exportXML(rows){
+      const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      let xml = `<?xml version="1.0" encoding="UTF-8"?><items>`;
+      for(const o of rows){
+        const img = IMG_MAP.get(o.sku)||"";
+        const ind = stockBucket(o.stock).label;
+        xml += `<item sku="${esc(o.sku)}"><model>${esc(o.model)}</model><indicator>${esc(ind)}</indicator><price>${o.price}</price>${img?`<image>${esc(img)}</image>`:""}</item>`;
+      }
+      xml += `</items>`;
+      downloadBlob("einhell_price_public.xml", "application/xml;charset=utf-8", xml);
+    }
+
+    async function init(){
+      try{
+        stats.textContent="Загрузка…";
+        await fetchImagesMap();              // optional; safe if missing
+        const xml = await fetchXML();        // must load
+        OFFERS = parseOffers(xml);
+        if (OFFERS.length === 0) throw new Error("Parsed 0 offers (namespace?)");
+        render();
+        footer.textContent = "Обновлено: " + new Date().toLocaleString();
+        errorBox.hidden = true;
+      }catch(err){
+        console.error(err);
+        errorBox.hidden = false;
+        errorBox.textContent = "Не удалось загрузить: " + err.message;
+        stats.textContent = "—";
+      }
+    }
+
+    // Events
+    q.addEventListener("input",debounce(render,220));
+    onlyInStock.addEventListener("change",render);
+    showImages.addEventListener("change",render);
+    sortKey.addEventListener("change",render);
+    clearBtn.addEventListener("click",()=>{q.value="";render();q.focus();});
+
+    btnDownload.addEventListener("click", ()=>{
+      const rows = sortOffers(currentFiltered());
+      switch(downloadFmt.value){
+        case "xlsx": return exportExcel(rows);
+        case "csv":  return exportCSV(rows);
+        case "json": return exportJSON(rows);
+        case "xml":  return exportXML(rows);
+      }
+    });
+
+    setInterval(init,30*60*1000); // refresh every 30 min
+    init();
+  </script>
+</body>
+</html>
