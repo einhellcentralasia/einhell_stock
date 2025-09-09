@@ -10,60 +10,53 @@
   <style>
     /* ---------- Apple-like palettes ---------- */
     :root{
+      --hdrH: 56px; /* header height */
       /* Light */
       --brand:#E2001A;
-      --bg:#ffffff;                /* systemBackground */
-      --bg2:#f5f5f7;               /* secondary background */
-      --ink:#1c1c1e;               /* label */
-      --muted:#6b7280;             /* secondary label */
-      --card:#f8f9fb;              /* grouped background */
-      --border:#e5e7eb;            /* separator */
-      --accent:#111111;
-      --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.08);
+      --bg:#ffffff; --bg2:#f5f5f7;
+      --ink:#1c1c1e; --muted:#6b7280;
+      --card:#f8f9fb; --border:#e5e7eb;
+      --accent:#111111; --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.08);
       --input:#fff; --inputText:#111;
       --ok:#2e7d32; --warn:#b91c1c; --over:#ef4444;
-      --badge:#2563eb;
     }
     html[data-theme="dark"]{
-      /* iOS dark: #1c1c1e / #2c2c2e / #3a3a3c / #f2f2f7 / #8e8e93 */
-      --bg:#1c1c1e;
-      --bg2:#161618;
-      --ink:#f2f2f7;
-      --muted:#8e8e93;
-      --card:#2c2c2e;
-      --border:#3a3a3c;
-      --accent:#f2f2f7;
+      --bg:#1c1c1e; --bg2:#161618; --ink:#f2f2f7; --muted:#8e8e93;
+      --card:#2c2c2e; --border:#3a3a3c; --accent:#f2f2f7; --shadow:0 1px 3px rgba(0,0,0,.55);
       --input:#1c1c1e; --inputText:#f2f2f7;
-      --shadow:0 1px 3px rgba(0,0,0,.55);
     }
 
     *{box-sizing:border-box}
     html,body{max-width:100%;overflow-x:hidden}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);
+      padding-top:var(--hdrH);} /* offset for fixed header */
     img{max-width:100%}
     .muted{color:var(--muted)}
     .hidden{display:none !important}
 
-    /* ---------- Header ---------- */
-    header{position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;
-      padding:8px 12px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px}
+    /* ---------- Fixed Header ---------- */
+    header{
+      position:fixed; top:0; left:0; right:0; z-index:20;
+      height:var(--hdrH); display:flex; align-items:center; gap:10px;
+      background:var(--brand); color:#fff; padding:8px 12px; box-shadow:0 2px 6px rgba(0,0,0,.15);
+    }
     .logo{height:28px;background:#fff;border-radius:6px;padding:4px}
     .hdr-fill{flex:1}
-    .chip{background:#000000cc;color:#fff;font-size:12px;padding:6px 10px;border-radius:999px;white-space:nowrap}
-    .hdr-actions{display:flex;align-items:center;gap:8px}
     .btn-brand{background:#111;color:#fff;border:1px solid #111;border-radius:10px;padding:8px 10px;cursor:pointer}
     html[data-theme="dark"] .btn-brand{background:#fff;color:#111;border-color:#fff}
 
     /* ---------- Control bar ---------- */
-    .controls{position:sticky;top:52px;z-index:15;background:var(--bg);border-bottom:1px solid var(--border);
-      display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px}
-    .search{flex:1 1 240px;position:relative}
+    .controls{
+      position:sticky; top:var(--hdrH); z-index:15;
+      background:var(--bg); border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 10px
+    }
+    .search{flex:1 1 200px; max-width:460px; position:relative} /* shorter */
     .search input{width:100%;padding:10px 40px 10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
     .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:18px;cursor:pointer;color:#9ca3af;padding:6px}
 
     .icon-btn, .icon-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;
       border:1px solid var(--border);background:var(--input);color:var(--inputText);border-radius:12px;padding:8px;cursor:pointer}
-    .icon-btn svg, .icon-toggle svg{width:18px;height:18px;display:block}
     .icon-toggle input{display:none}
     .icon-toggle.active{outline:2px solid #111}
     html[data-theme="dark"] .icon-toggle.active{outline:2px solid #fff}
@@ -71,7 +64,6 @@
     select{padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
     .btn{padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText);cursor:pointer}
     .btn:active{transform:scale(.99)}
-
     .group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .spacer{flex:1}
 
@@ -104,7 +96,7 @@
     @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
     @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
 
-    /* Detail (unchanged visual base) */
+    /* Detail / Blocks (unchanged) */
     .detail{padding:12px}
     .detail .topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
     .back{border:1px solid var(--border);background:var(--input);color:var(--inputText);border-radius:8px;padding:8px 10px;cursor:pointer}
@@ -145,11 +137,10 @@
   </style>
 </head>
 <body>
-  <!-- Header: logo, updated chip, theme & cart icons -->
+  <!-- Header (fixed): logo, theme, cart with count -->
   <header>
     <img class="logo" src="logo.png" alt="E" onerror="this.style.display='none'">
     <div class="hdr-fill"></div>
-    <span id="updatedTop" class="chip">—</span>
     <button id="themeToggle" class="btn-brand" title="Тема">🌗</button>
     <button id="openCart" class="icon-btn" title="Корзина">
       🛒 <span id="cartBadge" style="font-weight:700">0</span>
@@ -164,17 +155,14 @@
         <button class="clear-btn" id="clear" title="Очистить">✕</button>
       </div>
 
-      <!-- Only in stock toggle -->
       <label class="icon-toggle" id="togStock" title="Только в наличии">
         <input type="checkbox" id="onlyInStock"><span>✅</span>
       </label>
 
-      <!-- Images toggle -->
       <label class="icon-toggle" id="togImages" title="Изображения">
         <input type="checkbox" id="showImages"><span>🖼️</span>
       </label>
 
-      <!-- Sort -->
       <div class="group" title="Сортировка">
         <select id="sortKey">
           <option value="default">Сортировка</option>
@@ -185,7 +173,6 @@
         </select>
       </div>
 
-      <!-- Download -->
       <div class="group" title="Выгрузка">
         <select id="downloadFmt">
           <option value="xlsx">Excel</option>
@@ -199,7 +186,7 @@
 
     <div class="spacer"></div>
 
-    <!-- Cart summary (right) -->
+    <!-- Cart summary -->
     <div class="group" id="cartSummary" style="font-weight:700">
       🧺 <span id="cartCount">0</span> • <span id="cartTotal">0 ₸</span>
       <button class="btn" id="clearCart" title="Очистить корзину">🧹</button>
@@ -213,7 +200,7 @@
     <div class="list" id="list"></div>
   </div>
 
-  <!-- Detail view (unchanged logic) -->
+  <!-- Detail view -->
   <div id="view-detail" class="detail hidden">
     <div class="topbar">
       <button class="back" id="btnBack" title="Назад">←</button>
@@ -233,9 +220,7 @@
   <!-- Cart drawer -->
   <aside class="drawer" id="drawer" aria-hidden="true">
     <header>
-      <div class="meta-top">
-        <b>Итого:</b> <span id="drawerTotal">0 ₸</span>
-      </div>
+      <div class="meta-top"><b>Итого:</b> <span id="drawerTotal">0 ₸</span></div>
       <div class="meta-top">
         <button class="btn" id="drawerClear" title="Очистить">🧹</button>
         <button class="btn-brand" id="exportCart" title="Excel">⬇️</button>
@@ -261,7 +246,6 @@
     function downloadBlob(filename, mime, data){ const blob=new Blob([data],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); }
 
     /* ------------ DOM refs ------------ */
-    const updatedTop=$("#updatedTop"), footer=$("#footer");
     const viewList=$("#view-list"), viewDetail=$("#view-detail");
     const q=$("#q"), clearBtn=$("#clear"), onlyInStock=$("#onlyInStock"), showImages=$("#showImages");
     const togStock=$("#togStock"), togImages=$("#togImages");
@@ -276,9 +260,7 @@
 
     /* ------------ Data ------------ */
     let OFFERS=[], IMG_MAP=new Map(), DETAIL_MAP=new Map();
-    // Cart: sku -> {qty, price, model}
-    const CART=new Map();
-    const CART_KEY="einhell_cart_v1";
+    const CART=new Map(); const CART_KEY="einhell_cart_v1";
 
     /* ------------ Theme ------------ */
     const applyTheme=t=>document.documentElement.setAttribute('data-theme',t);
@@ -290,11 +272,7 @@
     applyTheme(localStorage.getItem('theme')||'light');
 
     /* ------------ Fetch ------------ */
-    async function fetchText(url){
-      const res=await fetch(url+"?t="+Date.now(),{cache:"no-store"});
-      if(!res.ok) throw new Error("HTTP "+res.status+" for "+url);
-      return res.text();
-    }
+    async function fetchText(url){ const res=await fetch(url+"?t="+Date.now(),{cache:"no-store"}); if(!res.ok) throw new Error("HTTP "+res.status+" for "+url); return res.text(); }
     async function fetchXML(){ const txt=await fetchText(XML_URL); const xml=new DOMParser().parseFromString(txt,"application/xml"); if(xml.querySelector("parsererror")) throw new Error("XML parse error"); return xml; }
     async function fetchImages(){ try{ const csv=await fetchText(IMAGES_CSV_URL); const p=Papa.parse(csv,{header:true,skipEmptyLines:true}); IMG_MAP.clear(); (p.data||[]).forEach(r=>{const s=(r.sku||"").trim(), u=(r.url||"").trim(); if(s&&u&&u!=="-") IMG_MAP.set(s,u);}); }catch(e){ IMG_MAP.clear();}}
     async function fetchDetails(){ try{ const csv=await fetchText(DETAILS_CSV_URL); const p=Papa.parse(csv,{header:true,skipEmptyLines:false}); DETAIL_MAP.clear(); (p.data||[]).forEach(r=>{const s=(r.sku||"").trim(); if(!s) return; DETAIL_MAP.set(s,{tech:(r.tech||"").trim(),log:(r.log||"").trim(),marketing:(r.marketing||"").trim(),add:(r.add||"").trim()});}); }catch(e){ DETAIL_MAP.clear();}}
@@ -331,55 +309,31 @@
     }
 
     /* ------------ Cart ------------ */
-    function saveCart(){
-      // Limit up to ~100 lines
-      const arr=[]; CART.forEach((v,sku)=>arr.push([sku,v.qty,v.price,v.model]));
-      localStorage.setItem(CART_KEY, JSON.stringify(arr.slice(0,100)));
-    }
-    function loadCart(){
-      try{
-        const raw=localStorage.getItem(CART_KEY); if(!raw) return;
-        const arr=JSON.parse(raw); if(!Array.isArray(arr)) return;
-        CART.clear();
-        for(const [sku,qty,price,model] of arr){ if(sku && qty>0) CART.set(sku,{qty:+qty,price:+price,model}); }
-      }catch{}
-    }
-    function cartSet(sku, qty, price, model){
-      if(qty<=0){ CART.delete(sku); } else { CART.set(sku,{qty:+qty, price:+price, model}); }
-      updateCartUI(); saveCart();
-    }
-    function cartAdd(sku, delta, price, model){
-      const cur=CART.get(sku)?.qty||0;
-      cartSet(sku, cur+delta, price, model);
-    }
+    function saveCart(){ const arr=[]; CART.forEach((v,sku)=>arr.push([sku,v.qty,v.price,v.model])); localStorage.setItem("einhell_cart_v1", JSON.stringify(arr.slice(0,100))); }
+    function loadCart(){ try{ const raw=localStorage.getItem("einhell_cart_v1"); if(!raw) return; const arr=JSON.parse(raw); CART.clear(); for(const [sku,qty,price,model] of arr){ if(sku && qty>0) CART.set(sku,{qty:+qty,price:+price,model}); } }catch{} }
+    function cartSet(sku, qty, price, model){ if(qty<=0){ CART.delete(sku); } else { CART.set(sku,{qty:+qty, price:+price, model}); } updateCartUI(); saveCart(); }
+    function cartAdd(sku, delta, price, model){ const cur=CART.get(sku)?.qty||0; cartSet(sku, cur+delta, price, model); }
     function cartClear(){ CART.clear(); updateCartUI(); saveCart(); }
-    function cartTotals(){
-      let lines=0,total=0; CART.forEach(v=>{lines+=1; total+=v.qty*v.price;}); return {lines,total};
-    }
+    function cartTotals(){ let lines=0,total=0; CART.forEach(v=>{lines+=1; total+=v.qty*v.price;}); return {lines,total}; }
     function updateCartUI(){
       const {lines,total}=cartTotals();
       cartBadge.textContent=lines;
-      $("#cartCount").textContent=String(lines);
-      $("#cartTotal").textContent=fmt(total);
-      $("#drawerTotal").textContent=fmt(total);
+      cartCount.textContent=String(lines);
+      cartTotal.textContent=fmt(total);
+      drawerTotal.textContent=fmt(total);
       renderDrawer();
-      // refresh card-side sums & overbook dots
       $$(".card").forEach(card=>{
-        const sku=card.getAttribute("data-sku");
-        if(!sku) return;
-        const v=CART.get(sku);
-        const sumEl=$(".sum",card);
-        const qtyIn=$(".qty",card);
-        const stock=+card.getAttribute("data-stock");
-        const overWrap=$(".overwrap",card);
+        const sku=card.getAttribute("data-sku"); const v=CART.get(sku);
+        const sumEl=$(".sum",card); const qtyIn=$(".qty",card);
+        const stock=+card.getAttribute("data-stock"); const overWrap=$(".overwrap",card);
         if(v && v.qty>0){
-          if(sumEl){ sumEl.textContent="Сумма: "+fmt(v.qty*(+card.getAttribute("data-price"))); sumEl.classList.remove("hidden"); }
-          if(qtyIn) qtyIn.value=v.qty;
-          if(overWrap) { overWrap.classList.toggle("hidden", !(v.qty>stock)); if(overWrap) overWrap.title=`Склад: ${stock}`; }
+          sumEl.textContent="Сумма: "+fmt(v.qty*(+card.getAttribute("data-price"))); sumEl.classList.remove("hidden");
+          qtyIn.value=v.qty;
+          overWrap.classList.toggle("hidden", !(v.qty>stock)); overWrap.title=`Склад: ${stock}`;
         }else{
-          if(sumEl) sumEl.classList.add("hidden");
-          if(qtyIn && !qtyIn.matches(":focus")) qtyIn.value="";
-          if(overWrap) overWrap.classList.add("hidden");
+          sumEl.classList.add("hidden");
+          if(!qtyIn.matches(":focus")) qtyIn.value="";
+          overWrap.classList.add("hidden");
         }
       });
     }
@@ -453,7 +407,7 @@
           <div class="cart-ctl">
             <input type="number" class="qty" min="0" step="1" placeholder="шт." value="${currQty}">
             <button class="btn" data-add="1" title="Добавить">＋</button>
-            <button class="btn" data-remove="1" title="Убрать">−</button>
+            <!-- removed minus button by request -->
             <button class="btn" data-clear="1" title="Очистить позицию">✕</button>
             <span class="sum ${inCart&&inCart.qty>0?"":"hidden"}">${inCart?("Сумма: "+fmt(inCart.qty*o.price)):""}</span>
             <span class="overwrap ${inCart&&inCart.qty>o.stock?"":"hidden"}" title="Склад: ${o.stock}"><span class="overdot"></span></span>
@@ -463,7 +417,6 @@
 
         const qtyInput=$(".qty",card);
         $(".btn[data-add]",card).addEventListener("click", ()=>{ const qty=+qtyInput.value||0; if(qty>0) cartAdd(o.sku, qty, o.price, o.model); });
-        $(".btn[data-remove]",card).addEventListener("click", ()=>{ const qty=+qtyInput.value||0; if(qty>0) cartAdd(o.sku, -qty, o.price, o.model); });
         $(".btn[data-clear]",card).addEventListener("click", ()=>{ cartSet(o.sku, 0, o.price, o.model); });
 
         frag.appendChild(card);
@@ -471,10 +424,9 @@
       list.appendChild(frag);
       stats.textContent=`Показано ${data.length} / ${OFFERS.length}${onlyInStock.checked?" • только в наличии":""}${showImages.checked?"":" • без изображений"}`;
 
-      // toggle styles
       togStock.classList.toggle("active", onlyInStock.checked);
       togImages.classList.toggle("active", showImages.checked);
-      updateCartUI(); // to sync dots/sums after render
+      updateCartUI();
     }
 
     function sanitizeBullets(addStr){ return (addStr||"").split(/\r?\n|[|;]+/g).map(s=>s.trim()).filter(Boolean); }
@@ -562,17 +514,16 @@
     async function init(){
       try{
         stats.textContent="Загрузка…";
-        loadCart(); // restore first
+        loadCart();
         await Promise.all([fetchImages(), fetchDetails()]);
         const xml=await fetchXML(); OFFERS=parseOffers(xml);
         if(OFFERS.length===0) throw new Error("Parsed 0 offers");
-        const now=new Date().toLocaleString();
-        footer.textContent="Обновлено: "+now; updatedTop.textContent="Обновлено: "+now;
+        footer.textContent="Обновлено: " + new Date().toLocaleString();
         errorBox.hidden=true;
         renderRoute();
       }catch(err){
         console.error(err);
-        errorBox.hidden=false; errorBox.textContent="Не удалось загрузить: "+err.message; stats.textContent="—";
+        errorBox.hidden=false; errorBox.textContent="Не удалось загрузить: " + err.message; stats.textContent="—";
       }
     }
 
