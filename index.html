@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Остатки Einhell</title>
   <meta name="description" content="Быстрый поиск остатков по артикулу или модели (Einhell)" />
-  <!-- SheetJS for Excel export (client-side, no server) -->
+  <!-- SheetJS for Excel export (client-side) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root{
@@ -51,6 +51,7 @@
     .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
     .leftMeta{display:flex;align-items:center;gap:12px}
     .thumb{width:70px;height:70px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #eee;cursor:pointer}
+    .thumb[hidden]{display:none}
     .price{color:var(--accent);font-weight:800}
     .stock{font-weight:800}
 
@@ -66,7 +67,7 @@
 </head>
 <body>
   <header>
-    <!-- Upload logo.png into the repo root; if missing, the image auto-hides -->
+    <!-- Upload logo.png into this repo root; if missing, the image auto-hides -->
     <img class="logo" src="logo.png" alt="Einhell" onerror="this.style.display='none'">
     <div class="titles">
       <div class="title">Остатки Einhell</div>
@@ -81,9 +82,15 @@
         autocomplete="off" />
       <button class="clear-btn" id="clear" title="Очистить">✕</button>
     </div>
+
     <label class="toggle">
       <input type="checkbox" id="onlyInStock" /> Только в наличии
     </label>
+
+    <label class="toggle">
+      <input type="checkbox" id="showImages" checked /> Показывать изображения
+    </label>
+
     <div class="sort">
       <select id="sortKey" title="Сортировка">
         <option value="default">Сортировка: по умолчанию</option>
@@ -93,7 +100,16 @@
         <option value="stock_asc">Остаток ↑</option>
       </select>
     </div>
-    <button class="btn" id="btnExcel" title="Скачать прайс в Excel">Скачать .xlsx</button>
+
+    <div class="sort">
+      <select id="downloadFmt" title="Формат выгрузки">
+        <option value="xlsx">Excel (.xlsx)</option>
+        <option value="csv">CSV (.csv)</option>
+        <option value="json">JSON (.json)</option>
+        <option value="xml">XML (.xml)</option>
+      </select>
+      <button class="btn" id="btnDownload">Скачать</button>
+    </div>
   </div>
 
   <div class="stats" id="stats">Загрузка…</div>
@@ -109,7 +125,7 @@
   <script>
     // Data URLs
     const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
-    // Optional mapping in THIS repo: images.csv (sku,url)
+    // Optional mapping in THIS repo: images.csv (sku,url) — comma-separated
     const IMAGES_CSV_URL = "./images.csv";
 
     // Helpers
@@ -117,16 +133,33 @@
       if (isNaN(n)) return n;
       return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸";
     }
-    function debounce(fn,ms=120){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+    function debounce(fn,ms=220){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
     function getByLocalName(node, local){ return Array.from(node.getElementsByTagNameNS("*", local)); }
     function firstByLocalName(node, local){ const a=getByLocalName(node, local); return a.length?a[0]:null; }
+    function escCSV(v){ // CSV cell escape
+      const s = String(v ?? "");
+      if (/[",;\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+      return s;
+    }
+    function downloadBlob(filename, mime, data){
+      const blob = new Blob([data], {type: mime});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }
 
     // DOM
     const q=document.getElementById("q");
     const clearBtn=document.getElementById("clear");
     const onlyInStock=document.getElementById("onlyInStock");
+    const showImages=document.getElementById("showImages");
     const sortKey=document.getElementById("sortKey");
-    const btnExcel=document.getElementById("btnExcel");
+    const downloadFmt=document.getElementById("downloadFmt");
+    const btnDownload=document.getElementById("btnDownload");
     const list=document.getElementById("list");
     const stats=document.getElementById("stats");
     const errorBox=document.getElementById("error");
@@ -134,8 +167,8 @@
     const lightbox=document.getElementById("lightbox");
     const lightboxImg=document.getElementById("lightboxImg");
 
-    let OFFERS=[];           // parsed XML
-    let IMG_MAP=new Map();   // sku -> url
+    let OFFERS=[];         // parsed XML
+    let IMG_MAP=new Map(); // sku -> url
 
     async function fetchText(url){
       const res = await fetch(url + "?t=" + Date.now(), { cache:"no-store" });
@@ -152,19 +185,20 @@
       try{
         const csv = await fetchText(IMAGES_CSV_URL);
         const lines = csv.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-        const [h,...rows] = lines;
-        const idxSku = h.toLowerCase().split(",").indexOf("sku");
-        const idxUrl = h.toLowerCase().split(",").indexOf("url");
+        const header = lines.shift().toLowerCase();
+        const sep = header.includes(";") ? ";" : ",";
+        const cols = header.split(sep).map(s=>s.trim());
+        const idxSku = cols.indexOf("sku");
+        const idxUrl = cols.indexOf("url");
         if(idxSku<0 || idxUrl<0) throw new Error("images.csv must have headers: sku,url");
         IMG_MAP.clear();
-        for(const r of rows){
-          const parts = r.split(",");
+        for(const line of lines){
+          const parts = line.split(sep);
           const sku = (parts[idxSku]||"").trim();
           const url = (parts[idxUrl]||"").trim();
-          if(sku && url) IMG_MAP.set(sku, url);
+          if(sku && url && url!=="-") IMG_MAP.set(sku, url);
         }
       }catch(e){
-        // Optional file; ignore if missing
         console.warn("images.csv not loaded:", e.message);
         IMG_MAP.clear();
       }
@@ -174,11 +208,12 @@
       const offers = getByLocalName(xml, "offer").map(offer=>{
         const sku = offer.getAttribute("sku") || "";
         const model = (firstByLocalName(offer, "model")?.textContent || "").trim();
+        const modelLC = model.toLowerCase();
         const av = firstByLocalName(offer, "availability");
         const available = (av?.getAttribute("available") || "no").toLowerCase()==="yes";
         const stock = Number(av?.getAttribute("stockCount") || "0");
         const price = Number((firstByLocalName(offer, "price")?.textContent || "0").replace(/[^\d]/g,""));
-        return { sku, model, available, stock, price };
+        return { sku, model, modelLC, available, stock, price };
       });
       return offers;
     }
@@ -193,64 +228,85 @@
       }
     }
 
-    function render(){
+    function currentFiltered(){
       const term = q.value.trim().toLowerCase();
-      const base = OFFERS.filter(o=>{
-        const hit = o.sku.includes(term) || o.model.toLowerCase().includes(term);
+      return OFFERS.filter(o=>{
+        const hit = o.sku.includes(term) || o.modelLC.includes(term);
         return hit && (!onlyInStock.checked || o.stock>0);
       });
+    }
 
-      const data = sortOffers(base);
+    function render(){
+      const data = sortOffers(currentFiltered());
 
       list.innerHTML="";
       if(!data.length){
         list.innerHTML = `<div class="card"><div class="model">Ничего не найдено. Попробуйте другой артикул или модель.</div></div>`;
       }else{
+        const imgsOn = showImages.checked;
+        // Build once, minimal reflow
+        const frag = document.createDocumentFragment();
         for(const o of data){
+          const card = document.createElement("div");
+          card.className = "card";
           const badgeClass=o.stock>0?"ok":"no";
           const badgeText=o.stock>0?"В наличии":"Нет в наличии";
           const imgUrl = IMG_MAP.get(o.sku) || "";
 
-          list.insertAdjacentHTML("beforeend",`
-            <div class="card">
-              <div class="row1">
-                <div class="sku">Артикул: ${o.sku}</div>
-                <span class="badge ${badgeClass}">${badgeText}</span>
-              </div>
-              <div class="model">${o.model}</div>
-              <div class="meta">
-                <div class="leftMeta">
-                  ${imgUrl ? `<img class="thumb" src="${imgUrl}" alt="${o.model}" onclick="showImg('${encodeURI(imgUrl)}')">` : ``}
-                  <div class="stock">Кол-во: ${o.stock}</div>
-                </div>
-                <div class="price">${formatTenge(o.price)}</div>
-              </div>
+          card.innerHTML = `
+            <div class="row1">
+              <div class="sku">Артикул: ${o.sku}</div>
+              <span class="badge ${badgeClass}">${badgeText}</span>
             </div>
-          `);
+            <div class="model">${o.model}</div>
+            <div class="meta">
+              <div class="leftMeta">
+                ${imgUrl && imgsOn ? `<img class="thumb" loading="lazy" src="${imgUrl}" alt="${o.model}">` : ``}
+                <div class="stock">Кол-во: ${o.stock}</div>
+              </div>
+              <div class="price">${formatTenge(o.price)}</div>
+            </div>
+          `;
+          if (imgUrl && imgsOn){
+            const img = card.querySelector(".thumb");
+            img.addEventListener("click", ()=>{ lightboxImg.src = imgUrl; lightbox.style.display='flex'; });
+          }
+          frag.appendChild(card);
         }
+        list.appendChild(frag);
       }
-      stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}`;
-    }
-
-    function showImg(url){
-      lightboxImg.src = url;
-      lightbox.style.display='flex';
+      stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}${showImages.checked?"":" • изображения скрыты"}`;
     }
 
     function exportExcel(rows){
-      // build plain objects for XLSX
-      const out = rows.map(o=>({
-        Артикул: o.sku,
-        Модель: o.model,
-        Остаток: o.stock,
-        Цена: o.price
-      }));
+      const out = rows.map(o=>({ Артикул:o.sku, Модель:o.model, Остаток:o.stock, Цена:o.price, Изображение: IMG_MAP.get(o.sku)||"" }));
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(out);
-      // apply simple number formats
-      ws["!cols"] = [{wch:12},{wch:50},{wch:10},{wch:12}];
+      ws["!cols"] = [{wch:12},{wch:50},{wch:10},{wch:12},{wch:60}];
       XLSX.utils.book_append_sheet(wb, ws, "Прайс");
       XLSX.writeFile(wb, "einhell_price.xlsx");
+    }
+    function exportCSV(rows){
+      const header = ["Артикул","Модель","Остаток","Цена","Изображение"];
+      const lines = [header.map(escCSV).join(",")];
+      for(const o of rows){
+        lines.push([o.sku, o.model, o.stock, o.price, IMG_MAP.get(o.sku)||""].map(escCSV).join(","));
+      }
+      downloadBlob("einhell_price.csv", "text/csv;charset=utf-8", lines.join("\n"));
+    }
+    function exportJSON(rows){
+      const arr = rows.map(o=>({sku:o.sku, model:o.model, stock:o.stock, price:o.price, image: IMG_MAP.get(o.sku)||null}));
+      downloadBlob("einhell_price.json", "application/json;charset=utf-8", JSON.stringify(arr, null, 2));
+    }
+    function exportXML(rows){
+      const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      let xml = `<?xml version="1.0" encoding="UTF-8"?><items>`;
+      for(const o of rows){
+        const img = IMG_MAP.get(o.sku)||"";
+        xml += `<item sku="${esc(o.sku)}"><model>${esc(o.model)}</model><stock>${o.stock}</stock><price>${o.price}</price>${img?`<image>${esc(img)}</image>`:""}</item>`;
+      }
+      xml += `</items>`;
+      downloadBlob("einhell_price.xml", "application/xml;charset=utf-8", xml);
     }
 
     async function init(){
@@ -272,17 +328,20 @@
     }
 
     // Events
-    q.addEventListener("input",debounce(render,80));
+    q.addEventListener("input",debounce(render,220)); // longer debounce for smoother typing
     onlyInStock.addEventListener("change",render);
+    showImages.addEventListener("change",render);
     sortKey.addEventListener("change",render);
     clearBtn.addEventListener("click",()=>{q.value="";render();q.focus();});
-    btnExcel.addEventListener("click",()=>{
-      const term = q.value.trim().toLowerCase();
-      const filt = OFFERS.filter(o=>{
-        const hit = o.sku.includes(term) || o.model.toLowerCase().includes(term);
-        return hit && (!onlyInStock.checked || o.stock>0);
-      });
-      exportExcel(sortOffers(filt));
+
+    btnDownload.addEventListener("click", ()=>{
+      const rows = sortOffers(currentFiltered());
+      switch(downloadFmt.value){
+        case "xlsx": return exportExcel(rows);
+        case "csv":  return exportCSV(rows);
+        case "json": return exportJSON(rows);
+        case "xml":  return exportXML(rows);
+      }
     });
 
     // Auto-refresh every 30 min
