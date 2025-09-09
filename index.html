@@ -5,30 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Остатки Einhell - Внутренние</title>
   <meta name="description" content="Быстрый поиск остатков по артикулу или модели (Einhell)" />
-  <!-- SheetJS for Excel export (client-side) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- PapaParse for robust CSV parsing (multiline, quoted) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    :root{
-      --brand:#E2001A; --ink:#111111; --bg:#ffffff; --card:#f8f9fb;
-      --muted:#6b7280; --ok:#2e7d32; --warn:#b91c1c; --accent:#111111;
-      --radius:14px;
-    }
+    :root{ --brand:#E2001A; --ink:#111111; --bg:#ffffff; --card:#f8f9fb; --muted:#6b7280; --ok:#2e7d32; --warn:#b91c1c; --accent:#111111; --radius:14px; }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
 
-    /* HEADER */
-    header{
-      position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;
-      padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px
-    }
+    header{ position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px }
     .logo{height:28px;width:auto;display:block;background:#fff;padding:4px;border-radius:6px}
     .titles{display:flex;flex-direction:column;gap:2px}
     .title{font-weight:800;font-size:18px;letter-spacing:.2px}
     .sub{font-size:12px;opacity:.95}
 
-    /* CONTROLS */
     .controls{padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border-bottom:1px solid #eee}
     .search{flex:1 1 260px;position:relative}
     .search input{width:100%;padding:12px 40px 12px 12px;font-size:16px;border:1px solid #e5e7eb;border-radius:10px;outline:none}
@@ -39,11 +28,10 @@
     .btn{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer}
     .btn:active{transform:scale(0.99)}
 
-    /* LIST */
     .stats{padding:6px 14px;font-size:13px;color:var(--muted)}
     .list{padding:8px 10px 18px;display:grid;gap:10px}
     .card{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-    .card.oos{opacity:.45;filter:grayscale(100%)} /* Out-of-stock visual dim */
+    .card.oos{opacity:.45;filter:grayscale(100%)}
     .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
     .sku{font-weight:800;font-size:15px}
     .badge{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:700;color:#fff;white-space:nowrap}
@@ -63,7 +51,6 @@
     @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
     @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
 
-    /* DETAIL PAGE */
     .detail{padding:12px}
     .detail .topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
     .back{border:none;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;cursor:pointer}
@@ -78,14 +65,15 @@
     .tabbtn{padding:8px 10px;border:1px solid #e5e7eb;border-radius:999px;background:#fff;cursor:pointer;font-size:13px}
     .tabbtn.active{background:#111;color:#fff;border-color:#111}
     .tabpanel{margin-top:10px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
-    .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-    .chip{background:#eef2ff;color:#1e3a8a;border:1px solid #dbeafe;border-radius:999px;padding:4px 8px;font-size:12px}
-    pre.block{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f9fafb;border:1px solid #eee;border-radius:8px;padding:10px}
+
+    /* Highlights as a clean two-column list (no blue pills) */
+    .bullets{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;list-style:disc;padding-left:18px;margin:0}
+    .bullets li{margin:0;line-height:1.35}
+    @media(max-width:720px){ .bullets{grid-template-columns:1fr} }
 
     .footer{padding:20px 14px;text-align:center;color:var(--muted);font-size:12px}
     .error{color:var(--warn);padding:12px 14px}
 
-    /* Lightbox */
     .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:50}
     .lightbox img{max-width:92vw;max-height:90vh;background:#fff;border-radius:10px;padding:6px}
   </style>
@@ -154,12 +142,10 @@
   </div>
 
   <script>
-    // ---- Config / URLs ----
     const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
     const IMAGES_CSV_URL = "./images.csv";     // sku,url
     const DETAILS_CSV_URL = "./add_data.csv";  // sku,tech,log,marketing,add
 
-    // ---- Helpers ----
     function formatTenge(n){ if (isNaN(n)) return n; return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸"; }
     function debounce(fn,ms=220){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
     function getByLocalName(node, local){ return Array.from(node.getElementsByTagNameNS("*", local)); }
@@ -167,7 +153,6 @@
     function escCSV(v){ const s=String(v??""); return /[",;\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
     function downloadBlob(filename, mime, data){ const blob=new Blob([data],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); }
 
-    // ---- DOM ----
     const viewList = document.getElementById("view-list");
     const viewDetail = document.getElementById("view-detail");
     const q=document.getElementById("q");
@@ -188,12 +173,10 @@
     const tabsEl=document.getElementById("tabs");
     const tabpanel=document.getElementById("tabpanel");
 
-    // ---- Data ----
-    let OFFERS=[];          // {sku, model, modelLC, available, stock, price}
-    let IMG_MAP=new Map();  // sku -> url
-    let DETAIL_MAP=new Map(); // sku -> {tech,log,marketing,add, bullets?}
+    let OFFERS=[];          
+    let IMG_MAP=new Map();  
+    let DETAIL_MAP=new Map();
 
-    // ---- Fetchers ----
     async function fetchText(url){
       const res = await fetch(url + "?t=" + Date.now(), { cache:"no-store" });
       if(!res.ok) throw new Error("HTTP " + res.status + " for " + url);
@@ -234,7 +217,6 @@
       }catch(e){ console.warn("add_data.csv not loaded:", e.message); DETAIL_MAP.clear(); }
     }
 
-    // ---- Parsers & Sorting ----
     function parseOffers(xml){
       const offers = getByLocalName(xml, "offer").map(offer=>{
         const sku = offer.getAttribute("sku") || "";
@@ -265,7 +247,6 @@
       });
     }
 
-    // ---- Rendering: LIST ----
     function renderList(){
       viewList.hidden=false; viewDetail.hidden=true;
       const data = sortOffers(currentFiltered());
@@ -317,7 +298,14 @@
       stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}${showImages.checked?"":" • изображения скрыты"}`;
     }
 
-    // ---- Rendering: DETAIL ----
+    function sanitizeBullets(addStr){
+      // Split by |, ;, or newline. Trim, drop empties.
+      return (addStr||"")
+        .split(/\r?\n|[|;]+/g)
+        .map(s=>s.trim())
+        .filter(Boolean);
+    }
+
     function renderDetail(sku, tab="highlights"){
       viewList.hidden=true; viewDetail.hidden=false;
 
@@ -344,13 +332,11 @@
       const heroImg = document.getElementById("heroImg");
       if (heroImg) heroImg.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
 
-      // Tabs
       const tabs = [
         {id:"highlights", label:"Highlights"},
         {id:"tech", label:"Тех"},
         {id:"log", label:"Лог"},
-        {id:"marketing", label:"Маркетинг"},
-        {id:"add", label:"Дополнительно"}
+        {id:"marketing", label:"Маркетинг"}
       ];
       tabsEl.innerHTML = "";
       tabs.forEach(t=>{
@@ -359,34 +345,32 @@
         b.textContent=t.label;
         b.addEventListener("click", ()=>{
           const base = `#sku=${encodeURIComponent(sku)}`;
-          location.hash = t.id==="highlights" ? base : `${base}&tab=${t.id}`;
+          // Replace hash instead of pushing (prevents back-button tab cycling)
+          location.replace(t.id==="highlights" ? base : `${base}&tab=${t.id}`);
         });
         tabsEl.appendChild(b);
       });
 
       // Tab content
-      const chips = (d.add||"").split(/\s*\|\s*|\s*;\s*/).filter(Boolean);
       let html = "";
       if (tab==="highlights"){
-        html += chips.length ? `<div class="chips">${chips.map(c=>`<span class="chip">${c}</span>`).join("")}</div>` : `<div class="muted" style="color:#6b7280">Нет кратких пунктов</div>`;
+        const bullets = sanitizeBullets(d.add);
+        html += bullets.length
+          ? `<ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul>`
+          : `<div class="muted" style="color:#6b7280">Нет кратких пунктов</div>`;
       }
       if (tab==="tech"){
-        html += d.tech ? `<pre class="block">${d.tech}</pre>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
+        html += d.tech ? `<pre class="block" style="white-space:pre-wrap">${d.tech}</pre>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
       }
       if (tab==="log"){
-        html += d.log ? `<pre class="block">${d.log}</pre>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
+        html += d.log ? `<pre class="block" style="white-space:pre-wrap">${d.log}</pre>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
       }
       if (tab==="marketing"){
-        // allow mild HTML (links, <br>) if you include any in CSV; otherwise it renders as plain text
         html += d.marketing ? `<div style="white-space:pre-wrap">${d.marketing}</div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
-      }
-      if (tab==="add"){
-        html += (d.add && !chips.length) ? `<pre class="block">${d.add}</pre>` : (!d.add ? `<div class="muted" style="color:#6b7280">Нет данных</div>` : `<div class="muted" style="color:#6b7280">См. Highlights</div>`);
       }
       tabpanel.innerHTML = html;
     }
 
-    // ---- Exports ----
     function exportExcel(rows){
       const out = rows.map(o=>({ Артикул:o.sku, Модель:o.model, Остаток:o.stock, Цена:o.price, Изображение: IMG_MAP.get(o.sku)||"" }));
       const wb = XLSX.utils.book_new();
@@ -416,17 +400,12 @@
       downloadBlob("einhell_price.xml", "application/xml;charset=utf-8", xml);
     }
 
-    // ---- Router ----
     function parseHash(){
       const h = location.hash.replace(/^#/,"");
-      const params = new URLSearchParams(h.replace(/^.+?\?/,"")); // fallback
-      // Accept formats: "sku=123&tab=tech" or just "sku=123"
       if (h.includes("sku=")){
         const sp = new URLSearchParams(h);
         return { sku: sp.get("sku"), tab: (sp.get("tab")||"highlights") };
       }
-      // Quick links "#sku=123&tab=tech" handled above
-      // If user types "#sku=123&tab=tech" it's fine
       return { sku:null, tab:null };
     }
     function renderRoute(){
@@ -438,7 +417,6 @@
       }
     }
 
-    // ---- Init & Events ----
     async function init(){
       try{
         stats.textContent="Загрузка…";
@@ -457,7 +435,7 @@
       }
     }
 
-    // List view events
+    // List events
     q.addEventListener("input",debounce(()=>{ if(!location.hash) renderList(); },220));
     onlyInStock.addEventListener("change",()=>{ if(!location.hash) renderList(); });
     showImages.addEventListener("change",()=>{ if(!location.hash) renderList(); });
@@ -474,15 +452,16 @@
       }
     });
 
-    // Detail view events
-    btnBack.addEventListener("click", ()=> history.back());
+    // Detail events
+    btnBack.addEventListener("click", ()=>{
+      // Jump directly to the list view without cycling history
+      location.replace("#"); // replace instead of push
+      renderList();
+    });
 
     window.addEventListener("hashchange", renderRoute);
 
-    // Auto-refresh every 30 min
     setInterval(init,30*60*1000);
-
-    // Go!
     init();
   </script>
 </body>
