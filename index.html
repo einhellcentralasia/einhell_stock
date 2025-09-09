@@ -3,63 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Остатки Einhell - Внутренние</title>
-  <meta name="description" content="Быстрый поиск остатков по артикулу или модели (Einhell)" />
+  <title>Остатки Einhell — Внутренние</title>
+  <meta name="description" content="Поиск остатков Einhell" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
+    /* ---------- Apple-like palettes ---------- */
     :root{
-      /* Light theme */
-      --brand:#E2001A; --ink:#111111; --bg:#ffffff; --card:#f8f9fb;
-      --muted:#6b7280; --ok:#2e7d32; --warn:#b91c1c; --accent:#111111;
-      --border:#e5e7eb; --chip:#111111; --chipText:#ffffff;
+      /* Light */
+      --brand:#E2001A;
+      --bg:#ffffff;                /* systemBackground */
+      --bg2:#f5f5f7;               /* secondary background */
+      --ink:#1c1c1e;               /* label */
+      --muted:#6b7280;             /* secondary label */
+      --card:#f8f9fb;              /* grouped background */
+      --border:#e5e7eb;            /* separator */
+      --accent:#111111;
       --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.08);
-      --badge:#2563eb; --over:#ef4444;
       --input:#fff; --inputText:#111;
+      --ok:#2e7d32; --warn:#b91c1c; --over:#ef4444;
+      --badge:#2563eb;
     }
-    /* Dark theme overrides */
     html[data-theme="dark"]{
-      --ink:#e5e7eb; --bg:#0b0c0f; --card:#121318; --muted:#9aa0a6;
-      --accent:#e5e7eb; --border:#21242c; --chip:#e5e7eb; --chipText:#0b0c0f;
-      --shadow:0 1px 3px rgba(0,0,0,.5); --input:#0f1116; --inputText:#e5e7eb;
+      /* iOS dark: #1c1c1e / #2c2c2e / #3a3a3c / #f2f2f7 / #8e8e93 */
+      --bg:#1c1c1e;
+      --bg2:#161618;
+      --ink:#f2f2f7;
+      --muted:#8e8e93;
+      --card:#2c2c2e;
+      --border:#3a3a3c;
+      --accent:#f2f2f7;
+      --input:#1c1c1e; --inputText:#f2f2f7;
+      --shadow:0 1px 3px rgba(0,0,0,.55);
     }
 
     *{box-sizing:border-box}
+    html,body{max-width:100%;overflow-x:hidden}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+    img{max-width:100%}
+    .muted{color:var(--muted)}
+    .hidden{display:none !important}
 
-    /* HEADER */
-    header{ position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;
-      padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px }
-    .logo{height:28px;width:auto;display:block;background:#fff;padding:4px;border-radius:6px}
-    .titles{display:flex;flex-direction:column;gap:2px;flex:1}
-    .title{font-weight:800;font-size:18px;letter-spacing:.2px}
-    .sub{font-size:12px;opacity:.95}
+    /* ---------- Header ---------- */
+    header{position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;
+      padding:8px 12px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px}
+    .logo{height:28px;background:#fff;border-radius:6px;padding:4px}
+    .hdr-fill{flex:1}
+    .chip{background:#000000cc;color:#fff;font-size:12px;padding:6px 10px;border-radius:999px;white-space:nowrap}
     .hdr-actions{display:flex;align-items:center;gap:8px}
-    .chip{background:var(--chip); color:var(--chipText); font-size:12px; padding:6px 10px; border-radius:999px; white-space:nowrap}
-
-    /* CONTROLS */
-    .controls{padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:58px;z-index:15}
-    .search{flex:1 1 260px;position:relative}
-    .search input{width:100%;padding:12px 40px 12px 12px;font-size:16px;border:1px solid var(--border);border-radius:10px;outline:none;background:var(--input);color:var(--inputText)}
-    .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:18px;cursor:pointer;color:#9ca3af;padding:6px}
-    .toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:#374151}
-    html[data-theme="dark"] .toggle{color:var(--muted)}
-    .sort{display:flex;align-items:center;gap:6px}
-    select{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
-    .btn{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText);cursor:pointer}
-    .btn:active{transform:scale(0.99)}
-    .btn-brand{background:#111;color:#fff;border-color:#111}
+    .btn-brand{background:#111;color:#fff;border:1px solid #111;border-radius:10px;padding:8px 10px;cursor:pointer}
     html[data-theme="dark"] .btn-brand{background:#fff;color:#111;border-color:#fff}
 
-    /* CART ICON */
-    .cart-btn{display:flex;align-items:center;gap:6px;border-radius:999px;padding:8px 10px;border:1px solid var(--border);background:var(--input);cursor:pointer}
-    .cart-dot{display:inline-block;width:8px;height:8px;border-radius:999px;background:#22c55e}
-    .cart-badge{font-weight:700}
+    /* ---------- Control bar ---------- */
+    .controls{position:sticky;top:52px;z-index:15;background:var(--bg);border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px}
+    .search{flex:1 1 240px;position:relative}
+    .search input{width:100%;padding:10px 40px 10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
+    .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:18px;cursor:pointer;color:#9ca3af;padding:6px}
 
-    /* LIST */
-    .stats{padding:6px 14px;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .icon-btn, .icon-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+      border:1px solid var(--border);background:var(--input);color:var(--inputText);border-radius:12px;padding:8px;cursor:pointer}
+    .icon-btn svg, .icon-toggle svg{width:18px;height:18px;display:block}
+    .icon-toggle input{display:none}
+    .icon-toggle.active{outline:2px solid #111}
+    html[data-theme="dark"] .icon-toggle.active{outline:2px solid #fff}
+
+    select{padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
+    .btn{padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText);cursor:pointer}
+    .btn:active{transform:scale(.99)}
+
+    .group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .spacer{flex:1}
+
+    /* ---------- Stats & list ---------- */
+    .stats{padding:6px 12px;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .list{padding:8px 10px 18px;display:grid;gap:10px}
-    .card{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)}
     .card.oos{opacity:.45;filter:grayscale(100%)}
     .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
     .sku{font-weight:800;font-size:15px}
@@ -69,124 +88,135 @@
     .micro{font-size:12px;color:#2563eb;display:flex;gap:10px;flex-wrap:wrap}
     .micro a{color:#2563eb;text-decoration:none}
     .micro a:hover{text-decoration:underline}
-
     .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
     .leftMeta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    .thumb{width:70px;height:70px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid var(--border);cursor:pointer}
-    .thumb[hidden]{display:none}
+    .thumb{width:70px;height:70px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:10px;cursor:pointer}
     .price{color:var(--accent);font-weight:800}
     .stock{font-weight:800}
 
-    /* CART CONTROLS ON CARD */
+    /* Cart controls on card */
     .cart-ctl{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
-    .qty{width:88px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--inputText)}
+    .qty{width:86px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--inputText)}
     .sum{font-weight:800}
-    .warn{color:var(--over);font-size:12px;display:flex;align-items:center;gap:6px}
+    .overdot{width:10px;height:10px;border-radius:50%;background:var(--over);display:inline-block}
+    .overwrap{display:flex;align-items:center;gap:6px}
 
     @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
     @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
 
-    /* DETAIL (unchanged look) */
+    /* Detail (unchanged visual base) */
     .detail{padding:12px}
     .detail .topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    .back{border:none;background:var(--input);color:var(--inputText);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer}
-    .detail .head{background:var(--card);border-radius:var(--radius);padding:12px;display:grid;gap:10px;box-shadow:var(--shadow);border:1px solid var(--border)}
+    .back{border:1px solid var(--border);background:var(--input);color:var(--inputText);border-radius:8px;padding:8px 10px;cursor:pointer}
+    .detail .head{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:grid;gap:10px;box-shadow:var(--shadow)}
     .detail .head.oos{opacity:.65;filter:grayscale(100%)}
     .detail .hrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
     .detail .title1{font-weight:800}
     .detail .hero{display:flex;gap:14px;align-items:center}
-    .detail .hero img{width:120px;height:120px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid var(--border);cursor:pointer}
-
+    .detail .hero img{width:120px;height:120px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:10px;cursor:pointer}
     .tabs{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
     .tabbtn{padding:8px 10px;border:1px solid var(--border);border-radius:999px;background:var(--input);color:var(--inputText);cursor:pointer;font-size:13px}
     .tabbtn.active{background:#111;color:#fff;border-color:#111}
     html[data-theme="dark"] .tabbtn.active{background:#fff;color:#111;border-color:#fff}
     .tabpanel{margin-top:10px;background:var(--input);color:var(--inputText);border:1px solid var(--border);border-radius:12px;padding:12px}
-
-    .block{background:#0f1116; border:1px solid var(--border); border-radius:8px; padding:10px}
-    html[data-theme="light"] .block{background:#f9fafb}
+    .block{background:#f5f5f7;border:1px solid var(--border);border-radius:8px;padding:10px}
+    html[data-theme="dark"] .block{background:#2c2c2e}
     .block pre{white-space:pre-wrap;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     .bullets{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;list-style:disc;padding-left:18px;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     .bullets li{margin:0;line-height:1.35}
     @media(max-width:720px){ .bullets{grid-template-columns:1fr} }
 
-    .footer{padding:20px 14px;text-align:center;color:var(--muted);font-size:12px}
-    .error{color:#b91c1c;padding:12px 14px}
+    .footer{padding:14px;text-align:center;color:var(--muted);font-size:12px}
 
-    /* LIGHTBOX */
+    /* Lightbox */
     .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:50}
     .lightbox img{max-width:92vw;max-height:90vh;background:#fff;border-radius:10px;padding:6px}
 
-    /* CART DRAWER */
-    .drawer{position:fixed;top:0;right:0;width:360px;max-width:92vw;height:100vh;background:var(--bg);border-left:1px solid var(--border);box-shadow:-4px 0 16px rgba(0,0,0,.25);transform:translateX(100%);transition:.25s;z-index:60;display:flex;flex-direction:column}
+    /* Drawer (cart) */
+    .drawer{position:fixed;top:0;right:0;width:360px;max-width:92vw;height:100vh;background:var(--bg);border-left:1px solid var(--border);
+      box-shadow:-4px 0 16px rgba(0,0,0,.25);transform:translateX(100%);transition:.25s;z-index:60;display:flex;flex-direction:column}
     .drawer.open{transform:translateX(0)}
-    .drawer header{background:var(--bg);color:var(--ink);box-shadow:none;border-bottom:1px solid var(--border);position:static}
+    .drawer header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px;border-bottom:1px solid var(--border);background:var(--bg)}
+    .drawer .meta-top{font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .drawer .body{padding:10px;overflow:auto;display:flex;flex-direction:column;gap:8px}
     .line{border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--card)}
     .line-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
-    .line-qty{display:flex;align-items:center;gap:6px}
-    .drawer .footer{margin-top:auto;border-top:1px solid var(--border);padding:12px}
-    .muted{color:var(--muted)}
+    .line-qty{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   </style>
 </head>
 <body>
+  <!-- Header: logo, updated chip, theme & cart icons -->
   <header>
-    <img class="logo" src="logo.png" alt="Einhell" onerror="this.style.display='none'">
-    <div class="titles">
-      <div class="title">Остатки Einhell</div>
-      <div class="sub">Поиск по артикулу или модели.</div>
-    </div>
-    <div class="hdr-actions">
-      <span id="updatedTop" class="chip">—</span>
-      <button id="themeToggle" class="btn-brand" title="Темная тема">🌗</button>
-      <button id="openCart" class="cart-btn" title="Корзина">
-        🛒 <span class="cart-badge" id="cartBadge">0</span><span class="cart-dot"></span>
-      </button>
-    </div>
+    <img class="logo" src="logo.png" alt="E" onerror="this.style.display='none'">
+    <div class="hdr-fill"></div>
+    <span id="updatedTop" class="chip">—</span>
+    <button id="themeToggle" class="btn-brand" title="Тема">🌗</button>
+    <button id="openCart" class="icon-btn" title="Корзина">
+      🛒 <span id="cartBadge" style="font-weight:700">0</span>
+    </button>
   </header>
 
-  <!-- LIST VIEW -->
-  <div id="view-list">
-    <div class="controls">
+  <!-- Control bar -->
+  <div class="controls">
+    <div class="group">
       <div class="search">
-        <input id="q" type="text" placeholder="Ввести Артикул (например, 4513812) или Модель (например, TE-CD 18/40)…" autocomplete="off" />
+        <input id="q" type="text" placeholder="Артикул или модель…" autocomplete="off" />
         <button class="clear-btn" id="clear" title="Очистить">✕</button>
       </div>
-      <label class="toggle"><input type="checkbox" id="onlyInStock" /> Только в наличии</label>
-      <label class="toggle"><input type="checkbox" id="showImages" /> Вкл. изображения</label>
-      <div class="sort">
-        <select id="sortKey" title="Сортировка">
-          <option value="default">Сортировка: по умолчанию</option>
+
+      <!-- Only in stock toggle -->
+      <label class="icon-toggle" id="togStock" title="Только в наличии">
+        <input type="checkbox" id="onlyInStock"><span>✅</span>
+      </label>
+
+      <!-- Images toggle -->
+      <label class="icon-toggle" id="togImages" title="Изображения">
+        <input type="checkbox" id="showImages"><span>🖼️</span>
+      </label>
+
+      <!-- Sort -->
+      <div class="group" title="Сортировка">
+        <select id="sortKey">
+          <option value="default">Сортировка</option>
           <option value="price_desc">Цена ↓</option>
           <option value="price_asc">Цена ↑</option>
           <option value="stock_desc">Остаток ↓</option>
           <option value="stock_asc">Остаток ↑</option>
         </select>
       </div>
-      <div class="sort">
-        <select id="downloadFmt" title="Формат выгрузки">
-          <option value="xlsx">Excel (.xlsx)</option>
-          <option value="csv">CSV (.csv)</option>
-          <option value="json">JSON (.json)</option>
-          <option value="xml">XML (.xml)</option>
+
+      <!-- Download -->
+      <div class="group" title="Выгрузка">
+        <select id="downloadFmt">
+          <option value="xlsx">Excel</option>
+          <option value="csv">CSV</option>
+          <option value="json">JSON</option>
+          <option value="xml">XML</option>
         </select>
-        <button class="btn" id="btnDownload">Скачать</button>
-      </div>
-      <div class="sort" id="cartSummary" style="margin-left:auto;font-weight:700">
-        🧺 <span id="cartCount">0 поз.</span> • <span id="cartTotal">0 ₸</span>
-        <button class="btn" id="clearCart" title="Очистить корзину">Очистить</button>
+        <button class="btn" id="btnDownload">⬇️</button>
       </div>
     </div>
 
+    <div class="spacer"></div>
+
+    <!-- Cart summary (right) -->
+    <div class="group" id="cartSummary" style="font-weight:700">
+      🧺 <span id="cartCount">0</span> • <span id="cartTotal">0 ₸</span>
+      <button class="btn" id="clearCart" title="Очистить корзину">🧹</button>
+    </div>
+  </div>
+
+  <!-- List view -->
+  <div id="view-list">
     <div class="stats" id="stats">Загрузка…</div>
-    <div class="error" id="error" hidden></div>
+    <div class="error muted" id="error" hidden></div>
     <div class="list" id="list"></div>
   </div>
 
-  <!-- DETAIL VIEW (unchanged) -->
-  <div id="view-detail" class="detail" hidden>
+  <!-- Detail view (unchanged logic) -->
+  <div id="view-detail" class="detail hidden">
     <div class="topbar">
-      <button class="back" id="btnBack">← Назад</button>
+      <button class="back" id="btnBack" title="Назад">←</button>
     </div>
     <div id="detail-head" class="head"></div>
     <div class="tabs" id="tabs"></div>
@@ -200,47 +230,41 @@
     <img id="lightboxImg" alt="preview">
   </div>
 
-  <!-- CART DRAWER -->
-  <aside class="drawer" id="drawer">
+  <!-- Cart drawer -->
+  <aside class="drawer" id="drawer" aria-hidden="true">
     <header>
-      <div class="titles">
-        <div class="title" style="color:var(--ink)">Корзина</div>
-        <div class="sub" style="color:var(--muted)">Редактируйте количество и выгружайте в Excel</div>
+      <div class="meta-top">
+        <b>Итого:</b> <span id="drawerTotal">0 ₸</span>
       </div>
-      <div class="hdr-actions">
-        <button class="btn" id="closeCart">Закрыть</button>
+      <div class="meta-top">
+        <button class="btn" id="drawerClear" title="Очистить">🧹</button>
+        <button class="btn-brand" id="exportCart" title="Excel">⬇️</button>
+        <button class="btn" id="closeCart" title="Закрыть">✕</button>
       </div>
     </header>
     <div class="body" id="drawerBody"></div>
-    <div class="footer">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><b>Итого:</b> <span id="drawerTotal">0 ₸</span></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn" id="drawerClear">Очистить</button>
-          <button class="btn-brand" id="exportCart">Выгрузить Excel</button>
-        </div>
-      </div>
-    </div>
   </aside>
 
   <script>
+    /* ------------ Utils ------------ */
     const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
     const IMAGES_CSV_URL = "./images.csv";
     const DETAILS_CSV_URL = "./add_data.csv";
 
-    const $ = (s,root=document)=>root.querySelector(s);
-    const $$ = (s,root=document)=>Array.from(root.querySelectorAll(s));
-    const fmt = n => isNaN(n) ? n : new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(+n) + " ₸";
-    const debounce = (fn,ms=220)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
-    const getByLocalName = (node, local)=>Array.from(node.getElementsByTagNameNS("*", local));
-    const firstByLocalName = (node, local)=>{const a=getByLocalName(node, local);return a.length?a[0]:null};
-    const escCSV = v => { const s=String(v??""); return /[",;\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
+    const $=(s,r=document)=>r.querySelector(s);
+    const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+    const fmt = n => isNaN(n)?n:new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(+n)+" ₸";
+    const debounce=(fn,ms=220)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
+    const getByLocalName=(node,local)=>Array.from(node.getElementsByTagNameNS("*",local));
+    const firstByLocalName=(node,local)=>{const a=getByLocalName(node,local);return a.length?a[0]:null};
+    const escCSV=v=>{const s=String(v??"");return /[",;\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s};
     function downloadBlob(filename, mime, data){ const blob=new Blob([data],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); }
 
-    // DOM
+    /* ------------ DOM refs ------------ */
     const updatedTop=$("#updatedTop"), footer=$("#footer");
     const viewList=$("#view-list"), viewDetail=$("#view-detail");
     const q=$("#q"), clearBtn=$("#clear"), onlyInStock=$("#onlyInStock"), showImages=$("#showImages");
+    const togStock=$("#togStock"), togImages=$("#togImages");
     const sortKey=$("#sortKey"), downloadFmt=$("#downloadFmt"), btnDownload=$("#btnDownload");
     const list=$("#list"), stats=$("#stats"), errorBox=$("#error");
     const lightbox=$("#lightbox"), lightboxImg=$("#lightboxImg");
@@ -250,13 +274,14 @@
     const cartBadge=$("#cartBadge"), cartCount=$("#cartCount"), cartTotal=$("#cartTotal"), clearCart=$("#clearCart");
     const themeToggle=$("#themeToggle");
 
-    // Data
+    /* ------------ Data ------------ */
     let OFFERS=[], IMG_MAP=new Map(), DETAIL_MAP=new Map();
     // Cart: sku -> {qty, price, model}
     const CART=new Map();
+    const CART_KEY="einhell_cart_v1";
 
-    // THEME
-    const applyTheme = t => document.documentElement.setAttribute('data-theme', t);
+    /* ------------ Theme ------------ */
+    const applyTheme=t=>document.documentElement.setAttribute('data-theme',t);
     themeToggle.addEventListener('click', ()=>{
       const cur=document.documentElement.getAttribute('data-theme')||'light';
       const next=cur==='light'?'dark':'light';
@@ -264,10 +289,10 @@
     });
     applyTheme(localStorage.getItem('theme')||'light');
 
-    // Fetch helpers
+    /* ------------ Fetch ------------ */
     async function fetchText(url){
-      const res = await fetch(url + "?t=" + Date.now(), { cache:"no-store" });
-      if(!res.ok) throw new Error("HTTP " + res.status + " for " + url);
+      const res=await fetch(url+"?t="+Date.now(),{cache:"no-store"});
+      if(!res.ok) throw new Error("HTTP "+res.status+" for "+url);
       return res.text();
     }
     async function fetchXML(){ const txt=await fetchText(XML_URL); const xml=new DOMParser().parseFromString(txt,"application/xml"); if(xml.querySelector("parsererror")) throw new Error("XML parse error"); return xml; }
@@ -275,7 +300,7 @@
     async function fetchDetails(){ try{ const csv=await fetchText(DETAILS_CSV_URL); const p=Papa.parse(csv,{header:true,skipEmptyLines:false}); DETAIL_MAP.clear(); (p.data||[]).forEach(r=>{const s=(r.sku||"").trim(); if(!s) return; DETAIL_MAP.set(s,{tech:(r.tech||"").trim(),log:(r.log||"").trim(),marketing:(r.marketing||"").trim(),add:(r.add||"").trim()});}); }catch(e){ DETAIL_MAP.clear();}}
 
     function parseOffers(xml){
-      return getByLocalName(xml, "offer").map(offer=>{
+      return getByLocalName(xml,"offer").map(offer=>{
         const sku=offer.getAttribute("sku")||"";
         const model=(firstByLocalName(offer,"model")?.textContent||"").trim();
         const modelLC=model.toLowerCase();
@@ -287,6 +312,7 @@
       });
     }
 
+    /* ------------ Sorting/filtering ------------ */
     function sortOffers(arr){
       switch (sortKey.value){
         case "price_desc": return arr.slice().sort((a,b)=> b.price - a.price);
@@ -304,78 +330,87 @@
       });
     }
 
-    // ---------- CART ----------
+    /* ------------ Cart ------------ */
+    function saveCart(){
+      // Limit up to ~100 lines
+      const arr=[]; CART.forEach((v,sku)=>arr.push([sku,v.qty,v.price,v.model]));
+      localStorage.setItem(CART_KEY, JSON.stringify(arr.slice(0,100)));
+    }
+    function loadCart(){
+      try{
+        const raw=localStorage.getItem(CART_KEY); if(!raw) return;
+        const arr=JSON.parse(raw); if(!Array.isArray(arr)) return;
+        CART.clear();
+        for(const [sku,qty,price,model] of arr){ if(sku && qty>0) CART.set(sku,{qty:+qty,price:+price,model}); }
+      }catch{}
+    }
     function cartSet(sku, qty, price, model){
       if(qty<=0){ CART.delete(sku); } else { CART.set(sku,{qty:+qty, price:+price, model}); }
-      updateCartUI();
+      updateCartUI(); saveCart();
     }
     function cartAdd(sku, delta, price, model){
       const cur=CART.get(sku)?.qty||0;
       cartSet(sku, cur+delta, price, model);
     }
-    function cartClear(){ CART.clear(); updateCartUI(); }
+    function cartClear(){ CART.clear(); updateCartUI(); saveCart(); }
     function cartTotals(){
-      let lines=0, total=0;
-      CART.forEach(v=>{ lines+=1; total+=v.qty*v.price; });
-      return {lines,total};
+      let lines=0,total=0; CART.forEach(v=>{lines+=1; total+=v.qty*v.price;}); return {lines,total};
     }
     function updateCartUI(){
       const {lines,total}=cartTotals();
       cartBadge.textContent=lines;
-      cartCount.textContent=`${lines} поз.`;
-      cartTotal.textContent=fmt(total);
-      drawerTotal.textContent=fmt(total);
+      $("#cartCount").textContent=String(lines);
+      $("#cartTotal").textContent=fmt(total);
+      $("#drawerTotal").textContent=fmt(total);
       renderDrawer();
-      // also repaint sums on visible cards without full rerender (lightweight)
+      // refresh card-side sums & overbook dots
       $$(".card").forEach(card=>{
         const sku=card.getAttribute("data-sku");
         if(!sku) return;
         const v=CART.get(sku);
         const sumEl=$(".sum",card);
-        if(v && v.qty>0){
-          sumEl.textContent="Сумма: "+fmt(v.qty* ( +card.getAttribute("data-price") ));
-          sumEl.hidden=false;
-        } else if(sumEl){ sumEl.hidden=true; }
-        const qtyIn=$(".qty",card); if(qtyIn && v) qtyIn.value=v.qty; else if(qtyIn && !v) qtyIn.value="";
-        const warn=$(".warn",card);
+        const qtyIn=$(".qty",card);
         const stock=+card.getAttribute("data-stock");
-        warn.hidden=!(v && v.qty>stock);
+        const overWrap=$(".overwrap",card);
+        if(v && v.qty>0){
+          if(sumEl){ sumEl.textContent="Сумма: "+fmt(v.qty*(+card.getAttribute("data-price"))); sumEl.classList.remove("hidden"); }
+          if(qtyIn) qtyIn.value=v.qty;
+          if(overWrap) { overWrap.classList.toggle("hidden", !(v.qty>stock)); if(overWrap) overWrap.title=`Склад: ${stock}`; }
+        }else{
+          if(sumEl) sumEl.classList.add("hidden");
+          if(qtyIn && !qtyIn.matches(":focus")) qtyIn.value="";
+          if(overWrap) overWrap.classList.add("hidden");
+        }
       });
     }
     function renderDrawer(){
       drawerBody.innerHTML="";
-      if(CART.size===0){ drawerBody.innerHTML = `<div class="muted">Корзина пуста</div>`; return; }
+      if(CART.size===0){ drawerBody.innerHTML=`<div class="muted">Корзина пуста</div>`; return; }
       CART.forEach((v,sku)=>{
-        const o=OFFERS.find(x=>x.sku===sku);
-        const line=document.createElement("div");
-        line.className="line";
-        const stock=o?o.stock:0, img=IMG_MAP.get(sku)||"";
+        const o=OFFERS.find(x=>x.sku===sku); const stock=o?o.stock:0, img=IMG_MAP.get(sku)||"";
+        const line=document.createElement("div"); line.className="line";
         line.innerHTML=`
           <div class="line-top">
             <div><b>${sku}</b> • ${o?o.model:v.model}</div>
             <div>${fmt(v.price)}</div>
           </div>
           <div class="line-qty">
-            ${img?`<img src="${img}" style="width:44px;height:44px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff">`:``}
+            ${img?`<img src="${img}" style="width:40px;height:40px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff">`:``}
             <input type="number" class="qty" min="0" step="1" value="${v.qty}" data-sku="${sku}">
-            <button class="btn" data-del="${sku}">Удалить</button>
+            <button class="btn" data-del="${sku}" title="Удалить">✕</button>
             <span class="sum">${fmt(v.qty*v.price)}</span>
-            <span class="warn" ${v.qty>stock?"":"hidden"}>⚠ Перебронировано (склад: ${stock})</span>
+            <span class="overwrap ${v.qty>stock?"":"hidden"}" title="Склад: ${stock}"><span class="overdot"></span></span>
           </div>`;
         drawerBody.appendChild(line);
       });
     }
 
-    // ---------- RENDER LIST ----------
+    /* ------------ Render list & details ------------ */
     function renderList(){
-      viewList.hidden=false; viewDetail.hidden=true;
+      viewList.classList.remove("hidden"); viewDetail.classList.add("hidden");
       const data=sortOffers(currentFiltered());
       list.innerHTML="";
-      if(!data.length){
-        list.innerHTML = `<div class="card"><div class="model">Ничего не найдено. Попробуйте другой артикул или модель.</div></div>`;
-        stats.textContent="—";
-        return;
-      }
+      if(!data.length){ list.innerHTML=`<div class="card"><div class="model">Ничего не найдено.</div></div>`; stats.textContent="—"; return; }
       const imgsOn=showImages.checked;
       const frag=document.createDocumentFragment();
       for(const o of data){
@@ -384,13 +419,12 @@
         card.setAttribute("data-sku",o.sku);
         card.setAttribute("data-price",o.price);
         card.setAttribute("data-stock",o.stock);
-        if (o.stock===0) card.classList.add("oos");
+        if(o.stock===0) card.classList.add("oos");
 
         const badgeClass=o.stock>0?"ok":"no";
         const badgeText=o.stock>0?"В наличии":"Нет в наличии";
         const imgUrl=IMG_MAP.get(o.sku)||"";
         const hasDetails=DETAIL_MAP.has(o.sku);
-
         const inCart=CART.get(o.sku);
         const currQty=inCart?.qty||"";
 
@@ -418,50 +452,35 @@
 
           <div class="cart-ctl">
             <input type="number" class="qty" min="0" step="1" placeholder="шт." value="${currQty}">
-            <button class="btn" data-add="1">Добавить</button>
-            <button class="btn" data-remove="1">Убрать</button>
-            <button class="btn" data-clear="1">Очистить</button>
-            <span class="sum" ${inCart&&inCart.qty>0?"":"hidden"}>${inCart?("Сумма: "+fmt(inCart.qty*o.price)):""}</span>
-            <span class="warn" ${inCart&&inCart.qty>o.stock?"":"hidden"}>⚠ Перебронировано (склад: ${o.stock})</span>
+            <button class="btn" data-add="1" title="Добавить">＋</button>
+            <button class="btn" data-remove="1" title="Убрать">−</button>
+            <button class="btn" data-clear="1" title="Очистить позицию">✕</button>
+            <span class="sum ${inCart&&inCart.qty>0?"":"hidden"}">${inCart?("Сумма: "+fmt(inCart.qty*o.price)):""}</span>
+            <span class="overwrap ${inCart&&inCart.qty>o.stock?"":"hidden"}" title="Склад: ${o.stock}"><span class="overdot"></span></span>
           </div>
         `;
-        if (imgUrl && imgsOn){
-          const img=$(".thumb",card);
-          img?.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
-        }
+        if(imgUrl && imgsOn){ $(".thumb",card)?.addEventListener("click", ()=>{ $("#lightboxImg").src=imgUrl; $("#lightbox").style.display='flex'; }); }
 
-        // Event delegation per card
         const qtyInput=$(".qty",card);
-        $(".btn[data-add]",card).addEventListener("click", ()=>{
-          const qty=+qtyInput.value||0;
-          if(qty<=0) return;
-          cartAdd(o.sku, qty, o.price, o.model);
-        });
-        $(".btn[data-remove]",card).addEventListener("click", ()=>{
-          const qty=+qtyInput.value||0;
-          if(qty<=0) return;
-          cartAdd(o.sku, -qty, o.price, o.model);
-        });
-        $(".btn[data-clear]",card).addEventListener("click", ()=>{
-          cartSet(o.sku, 0, o.price, o.model);
-        });
+        $(".btn[data-add]",card).addEventListener("click", ()=>{ const qty=+qtyInput.value||0; if(qty>0) cartAdd(o.sku, qty, o.price, o.model); });
+        $(".btn[data-remove]",card).addEventListener("click", ()=>{ const qty=+qtyInput.value||0; if(qty>0) cartAdd(o.sku, -qty, o.price, o.model); });
+        $(".btn[data-clear]",card).addEventListener("click", ()=>{ cartSet(o.sku, 0, o.price, o.model); });
 
         frag.appendChild(card);
       }
       list.appendChild(frag);
-      stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}${showImages.checked?"":" • изображения скрыты"}`;
+      stats.textContent=`Показано ${data.length} / ${OFFERS.length}${onlyInStock.checked?" • только в наличии":""}${showImages.checked?"":" • без изображений"}`;
+
+      // toggle styles
+      togStock.classList.toggle("active", onlyInStock.checked);
+      togImages.classList.toggle("active", showImages.checked);
+      updateCartUI(); // to sync dots/sums after render
     }
 
-    function sanitizeBullets(addStr){
-      return (addStr||"")
-        .split(/\r?\n|[|;]+/g)
-        .map(s=>s.trim())
-        .filter(Boolean);
-    }
+    function sanitizeBullets(addStr){ return (addStr||"").split(/\r?\n|[|;]+/g).map(s=>s.trim()).filter(Boolean); }
 
-    // DETAIL (unchanged logic)
     function renderDetail(sku, tab="details"){
-      viewList.hidden=true; viewDetail.hidden=false;
+      viewList.classList.add("hidden"); viewDetail.classList.remove("hidden");
       const o=OFFERS.find(x=>x.sku===sku);
       const d=DETAIL_MAP.get(sku)||{tech:"",log:"",marketing:"",add:""};
       const imgUrl=IMG_MAP.get(sku)||"";
@@ -471,7 +490,7 @@
         <div class="hrow"><div class="title1">${o?`Артикул: ${o.sku}`:sku}</div>${badge}</div>
         <div class="hrow"><div>${o?o.model:""}</div><div class="price">${o?fmt(o.price):""}</div></div>
         <div class="hero">${imgUrl?`<img id="heroImg" loading="lazy" src="${imgUrl}" alt="${o?o.model:""}">`:""}${o?`<div class="muted">Остаток: ${o.stock}</div>`:""}</div>`;
-      const heroImg=$("#heroImg"); if(heroImg) heroImg.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
+      $("#heroImg")?.addEventListener("click", ()=>{ $("#lightboxImg").src=imgUrl; $("#lightbox").style.display='flex'; });
 
       const tabs=[{id:"details",label:"Подробнее"},{id:"tech",label:"Тех"},{id:"log",label:"Лог"},{id:"marketing",label:"Маркетинг"}];
       tabsEl.innerHTML=""; tabs.forEach(t=>{ const b=document.createElement("button"); b.className="tabbtn"+(t.id===tab?" active":""); b.textContent=t.label;
@@ -481,11 +500,11 @@
       if(tab==="details"){ const bullets=sanitizeBullets(d.add); html+= bullets.length?`<div class="block"><ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:`<div class="muted">Нет кратких пунктов</div>`; }
       if(tab==="tech"){ html+= d.tech?`<div class="block"><pre>${d.tech}</pre></div>`:`<div class="muted">Нет данных</div>`; }
       if(tab==="log"){ html+= d.log?`<div class="block"><pre>${d.log}</pre></div>`:`<div class="muted">Нет данных</div>`; }
-      if(tab==="marketing"){ html+= d.marketing?`<div class="block" style="background:var(--input);border-color:var(--border)"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>`:`<div class="muted">Нет данных</div>`; }
+      if(tab==="marketing"){ html+= d.marketing?`<div class="block"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>`:`<div class="muted">Нет данных</div>`; }
       tabpanel.innerHTML=html;
     }
 
-    // --------- EXPORTS (main list) ----------
+    /* ------------ Exports (main list) ------------ */
     function exportExcel(rows){
       const out = rows.map(o=>{
         const d = DETAIL_MAP.get(o.sku) || {};
@@ -519,7 +538,7 @@
       xml+=`</items>`; downloadBlob("einhell_price.xml","application/xml;charset=utf-8",xml);
     }
 
-    // --------- CART EXPORT ----------
+    /* ------------ Cart export ------------ */
     function exportCartExcel(){
       if(CART.size===0) return;
       const rows=[];
@@ -535,35 +554,35 @@
       XLSX.writeFile(wb, name);
     }
 
-    // Router
+    /* ------------ Router ------------ */
     function parseHash(){ const h=location.hash.replace(/^#/,""); if(h.includes("sku=")){ const sp=new URLSearchParams(h); return {sku:sp.get("sku"), tab:(sp.get("tab")||"details")}; } return {sku:null,tab:null};}
     function renderRoute(){ const {sku,tab}=parseHash(); if(sku){ renderDetail(sku,tab||"details"); } else { renderList(); } }
 
+    /* ------------ Init ------------ */
     async function init(){
       try{
         stats.textContent="Загрузка…";
+        loadCart(); // restore first
         await Promise.all([fetchImages(), fetchDetails()]);
         const xml=await fetchXML(); OFFERS=parseOffers(xml);
-        if(OFFERS.length===0) throw new Error("Parsed 0 offers (namespace?)");
+        if(OFFERS.length===0) throw new Error("Parsed 0 offers");
         const now=new Date().toLocaleString();
-        footer.textContent = "Обновлено: " + now;
-        updatedTop.textContent = "Обновлено: " + now;
+        footer.textContent="Обновлено: "+now; updatedTop.textContent="Обновлено: "+now;
         errorBox.hidden=true;
         renderRoute();
       }catch(err){
         console.error(err);
-        errorBox.hidden=false;
-        errorBox.textContent="Не удалось загрузить: "+err.message;
-        stats.textContent="—";
+        errorBox.hidden=false; errorBox.textContent="Не удалось загрузить: "+err.message; stats.textContent="—";
       }
     }
 
-    // Events: list
+    /* ------------ Events ------------ */
     q.addEventListener("input",debounce(()=>{ if(!location.hash) renderList(); },220));
     onlyInStock.addEventListener("change",()=>{ if(!location.hash) renderList(); });
     showImages.addEventListener("change",()=>{ if(!location.hash) renderList(); });
     sortKey.addEventListener("change",()=>{ if(!location.hash) renderList(); });
     clearBtn.addEventListener("click",()=>{ q.value=""; if(!location.hash){ renderList(); q.focus(); } });
+    btnBack.addEventListener("click", ()=>{ location.replace("#"); renderList(); });
 
     btnDownload.addEventListener("click", ()=>{
       const rows=sortOffers(currentFiltered());
@@ -575,26 +594,24 @@
       }
     });
 
-    // Detail
-    btnBack.addEventListener("click", ()=>{ location.replace("#"); renderList(); });
+    // Toggle button visuals
+    togStock.addEventListener("click", (e)=>{ if(e.target.tagName!=="INPUT"){ onlyInStock.checked=!onlyInStock.checked; } renderList(); });
+    togImages.addEventListener("click", (e)=>{ if(e.target.tagName!=="INPUT"){ showImages.checked=!showImages.checked; } renderList(); });
 
-    // Cart drawer
-    openCart.addEventListener("click", ()=> drawer.classList.add("open"));
-    closeCart.addEventListener("click", ()=> drawer.classList.remove("open"));
+    // Drawer
+    openCart.addEventListener("click", ()=>{ drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false"); });
+    closeCart.addEventListener("click", ()=>{ drawer.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); });
     drawerClear.addEventListener("click", ()=> cartClear());
     clearCart.addEventListener("click", ()=> cartClear());
     exportCart.addEventListener("click", ()=> exportCartExcel());
     drawerBody.addEventListener("input", (e)=>{
       if(e.target.classList.contains("qty")){
-        const sku=e.target.getAttribute("data-sku");
-        const v=CART.get(sku); if(!v) return;
-        const q=+e.target.value||0;
-        cartSet(sku, q, v.price, v.model);
+        const sku=e.target.getAttribute("data-sku"); const v=CART.get(sku); if(!v) return;
+        const q=+e.target.value||0; cartSet(sku, q, v.price, v.model);
       }
     });
     drawerBody.addEventListener("click", (e)=>{
-      const del=e.target.getAttribute("data-del");
-      if(del){ CART.delete(del); updateCartUI(); }
+      const del=e.target.getAttribute("data-del"); if(del){ CART.delete(del); updateCartUI(); saveCart(); }
     });
 
     window.addEventListener("hashchange", renderRoute);
