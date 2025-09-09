@@ -8,78 +8,67 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    /* ---------- Apple-like palettes ---------- */
     :root{
-      --hdrH: 56px; /* header height */
-      /* Light */
       --brand:#E2001A;
+      /* Light */
       --bg:#ffffff; --bg2:#f5f5f7;
       --ink:#1c1c1e; --muted:#6b7280;
       --card:#f8f9fb; --border:#e5e7eb;
       --accent:#111111; --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.08);
       --input:#fff; --inputText:#111;
       --ok:#2e7d32; --warn:#b91c1c; --over:#ef4444;
+      --green:#22c55e; --red:#ef4444;
     }
     html[data-theme="dark"]{
       --bg:#1c1c1e; --bg2:#161618; --ink:#f2f2f7; --muted:#8e8e93;
       --card:#2c2c2e; --border:#3a3a3c; --accent:#f2f2f7; --shadow:0 1px 3px rgba(0,0,0,.55);
       --input:#1c1c1e; --inputText:#f2f2f7;
     }
-
     *{box-sizing:border-box}
     html,body{max-width:100%;overflow-x:hidden}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);
-      padding-top:var(--hdrH);} /* offset for fixed header */
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
     img{max-width:100%}
+    .hidden{display:none!important}
     .muted{color:var(--muted)}
-    .hidden{display:none !important}
 
-    /* ---------- Fixed Header ---------- */
+    /* Header (fixed) */
     header{
-      position:fixed; top:0; left:0; right:0; z-index:20;
-      height:var(--hdrH); display:flex; align-items:center; gap:10px;
+      position:fixed; inset:0 0 auto 0; z-index:20;
+      display:flex; align-items:center; gap:10px;
       background:var(--brand); color:#fff; padding:8px 12px; box-shadow:0 2px 6px rgba(0,0,0,.15);
     }
     .logo{height:28px;background:#fff;border-radius:6px;padding:4px}
-    .hdr-fill{flex:1}
+    .hdr-spacer{flex:1}
     .btn-brand{background:#111;color:#fff;border:1px solid #111;border-radius:10px;padding:8px 10px;cursor:pointer}
     html[data-theme="dark"] .btn-brand{background:#fff;color:#111;border-color:#fff}
 
-    /* ---------- Control bar ---------- */
+    /* Controls */
     .controls{
-      position:sticky; top:var(--hdrH); z-index:15;
+      position:sticky; z-index:15;
       background:var(--bg); border-bottom:1px solid var(--border);
       display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 10px
     }
-    .search{flex:1 1 200px; max-width:460px; position:relative} /* shorter */
+    .search{flex:1 1 200px; max-width:460px; position:relative}
     .search input{width:100%;padding:10px 40px 10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
     .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:18px;cursor:pointer;color:#9ca3af;padding:6px}
-
-    .icon-btn, .icon-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;
-      border:1px solid var(--border);background:var(--input);color:var(--inputText);border-radius:12px;padding:8px;cursor:pointer}
-    .icon-toggle input{display:none}
-    .icon-toggle.active{outline:2px solid #111}
-    html[data-theme="dark"] .icon-toggle.active{outline:2px solid #fff}
-
+    .group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .spacer{flex:1}
     select{padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
     .btn{padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText);cursor:pointer}
     .btn:active{transform:scale(.99)}
-    .group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .spacer{flex:1}
+    .btn-green{background:var(--green);border-color:var(--green);color:#fff}
+    .btn-red{background:var(--red);border-color:var(--red);color:#fff}
 
-    /* ---------- Stats & list ---------- */
+    /* Stats & list */
     .stats{padding:6px 12px;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .list{padding:8px 10px 18px;display:grid;gap:10px}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)}
     .card.oos{opacity:.45;filter:grayscale(100%)}
     .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
-    .sku{font-weight:800;font-size:15px}
+    .sku{font-weight:800;font-size:15px} /* now shows just SKU */
     .badge{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:700;color:#fff;white-space:nowrap}
     .ok{background:var(--ok)} .no{background:var(--warn)}
     .model{margin:6px 0 6px;font-size:14px}
-    .micro{font-size:12px;color:#2563eb;display:flex;gap:10px;flex-wrap:wrap}
-    .micro a{color:#2563eb;text-decoration:none}
-    .micro a:hover{text-decoration:underline}
     .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
     .leftMeta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
     .thumb{width:70px;height:70px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:10px;cursor:pointer}
@@ -88,7 +77,12 @@
 
     /* Cart controls on card */
     .cart-ctl{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
-    .qty{width:86px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--inputText)}
+    .qty{
+      width:96px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--inputText);
+      -moz-appearance:textfield; /* FF remove arrows */
+    }
+    /* Chrome/Safari remove arrows */
+    .qty::-webkit-outer-spin-button,.qty::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
     .sum{font-weight:800}
     .overdot{width:10px;height:10px;border-radius:50%;background:var(--over);display:inline-block}
     .overwrap{display:flex;align-items:center;gap:6px}
@@ -96,7 +90,7 @@
     @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
     @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
 
-    /* Detail / Blocks (unchanged) */
+    /* Detail */
     .detail{padding:12px}
     .detail .topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
     .back{border:1px solid var(--border);background:var(--input);color:var(--inputText);border-radius:8px;padding:8px 10px;cursor:pointer}
@@ -137,30 +131,30 @@
   </style>
 </head>
 <body>
-  <!-- Header (fixed): logo, theme, cart with count -->
-  <header>
+  <!-- Header -->
+  <header id="hdr">
     <img class="logo" src="logo.png" alt="E" onerror="this.style.display='none'">
-    <div class="hdr-fill"></div>
+    <div class="hdr-spacer"></div>
     <button id="themeToggle" class="btn-brand" title="Тема">🌗</button>
-    <button id="openCart" class="icon-btn" title="Корзина">
-      🛒 <span id="cartBadge" style="font-weight:700">0</span>
-    </button>
+    <button id="openCart" class="btn" title="Корзина">🛒 <b id="cartBadge">0</b></button>
   </header>
 
-  <!-- Control bar -->
-  <div class="controls">
+  <!-- Controls -->
+  <div class="controls" id="controls">
     <div class="group">
       <div class="search">
         <input id="q" type="text" placeholder="Артикул или модель…" autocomplete="off" />
         <button class="clear-btn" id="clear" title="Очистить">✕</button>
       </div>
 
-      <label class="icon-toggle" id="togStock" title="Только в наличии">
-        <input type="checkbox" id="onlyInStock"><span>✅</span>
+      <label class="group" style="font-size:13px">
+        <input type="checkbox" id="onlyInStock" />
+        <span>Только в наличии</span>
       </label>
 
-      <label class="icon-toggle" id="togImages" title="Изображения">
-        <input type="checkbox" id="showImages"><span>🖼️</span>
+      <label class="group" style="font-size:13px">
+        <input type="checkbox" id="showImages" />
+        <span>Изображения</span>
       </label>
 
       <div class="group" title="Сортировка">
@@ -196,7 +190,7 @@
   <!-- List view -->
   <div id="view-list">
     <div class="stats" id="stats">Загрузка…</div>
-    <div class="error muted" id="error" hidden></div>
+    <div class="muted" id="error" hidden></div>
     <div class="list" id="list"></div>
   </div>
 
@@ -231,7 +225,6 @@
   </aside>
 
   <script>
-    /* ------------ Utils ------------ */
     const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
     const IMAGES_CSV_URL = "./images.csv";
     const DETAILS_CSV_URL = "./add_data.csv";
@@ -245,10 +238,10 @@
     const escCSV=v=>{const s=String(v??"");return /[",;\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s};
     function downloadBlob(filename, mime, data){ const blob=new Blob([data],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); }
 
-    /* ------------ DOM refs ------------ */
+    /* DOM refs */
+    const hdr=$("#hdr"), controls=$("#controls");
     const viewList=$("#view-list"), viewDetail=$("#view-detail");
     const q=$("#q"), clearBtn=$("#clear"), onlyInStock=$("#onlyInStock"), showImages=$("#showImages");
-    const togStock=$("#togStock"), togImages=$("#togImages");
     const sortKey=$("#sortKey"), downloadFmt=$("#downloadFmt"), btnDownload=$("#btnDownload");
     const list=$("#list"), stats=$("#stats"), errorBox=$("#error");
     const lightbox=$("#lightbox"), lightboxImg=$("#lightboxImg");
@@ -258,20 +251,29 @@
     const cartBadge=$("#cartBadge"), cartCount=$("#cartCount"), cartTotal=$("#cartTotal"), clearCart=$("#clearCart");
     const themeToggle=$("#themeToggle");
 
-    /* ------------ Data ------------ */
+    /* State */
     let OFFERS=[], IMG_MAP=new Map(), DETAIL_MAP=new Map();
     const CART=new Map(); const CART_KEY="einhell_cart_v1";
 
-    /* ------------ Theme ------------ */
+    /* Theme */
     const applyTheme=t=>document.documentElement.setAttribute('data-theme',t);
     themeToggle.addEventListener('click', ()=>{
       const cur=document.documentElement.getAttribute('data-theme')||'light';
       const next=cur==='light'?'dark':'light';
       applyTheme(next); localStorage.setItem('theme', next);
+      updateOffsets();
     });
     applyTheme(localStorage.getItem('theme')||'light');
 
-    /* ------------ Fetch ------------ */
+    /* Header/controls offsets */
+    function updateOffsets(){
+      const h = hdr.offsetHeight;
+      document.body.style.paddingTop = h + "px";
+      controls.style.top = h + "px";
+    }
+    window.addEventListener('resize', updateOffsets);
+
+    /* Fetch */
     async function fetchText(url){ const res=await fetch(url+"?t="+Date.now(),{cache:"no-store"}); if(!res.ok) throw new Error("HTTP "+res.status+" for "+url); return res.text(); }
     async function fetchXML(){ const txt=await fetchText(XML_URL); const xml=new DOMParser().parseFromString(txt,"application/xml"); if(xml.querySelector("parsererror")) throw new Error("XML parse error"); return xml; }
     async function fetchImages(){ try{ const csv=await fetchText(IMAGES_CSV_URL); const p=Papa.parse(csv,{header:true,skipEmptyLines:true}); IMG_MAP.clear(); (p.data||[]).forEach(r=>{const s=(r.sku||"").trim(), u=(r.url||"").trim(); if(s&&u&&u!=="-") IMG_MAP.set(s,u);}); }catch(e){ IMG_MAP.clear();}}
@@ -290,7 +292,7 @@
       });
     }
 
-    /* ------------ Sorting/filtering ------------ */
+    /* Sorting/filtering */
     function sortOffers(arr){
       switch (sortKey.value){
         case "price_desc": return arr.slice().sort((a,b)=> b.price - a.price);
@@ -308,27 +310,24 @@
       });
     }
 
-    /* ------------ Cart ------------ */
-    function saveCart(){ const arr=[]; CART.forEach((v,sku)=>arr.push([sku,v.qty,v.price,v.model])); localStorage.setItem("einhell_cart_v1", JSON.stringify(arr.slice(0,100))); }
-    function loadCart(){ try{ const raw=localStorage.getItem("einhell_cart_v1"); if(!raw) return; const arr=JSON.parse(raw); CART.clear(); for(const [sku,qty,price,model] of arr){ if(sku && qty>0) CART.set(sku,{qty:+qty,price:+price,model}); } }catch{} }
+    /* Cart (persist) */
+    function saveCart(){ const arr=[]; CART.forEach((v,sku)=>arr.push([sku,v.qty,v.price,v.model])); localStorage.setItem(CART_KEY, JSON.stringify(arr.slice(0,100))); }
+    function loadCart(){ try{ const raw=localStorage.getItem(CART_KEY); if(!raw) return; const arr=JSON.parse(raw); CART.clear(); for(const [sku,qty,price,model] of arr){ if(sku && qty>0) CART.set(sku,{qty:+qty,price:+price,model}); } }catch{} }
     function cartSet(sku, qty, price, model){ if(qty<=0){ CART.delete(sku); } else { CART.set(sku,{qty:+qty, price:+price, model}); } updateCartUI(); saveCart(); }
-    function cartAdd(sku, delta, price, model){ const cur=CART.get(sku)?.qty||0; cartSet(sku, cur+delta, price, model); }
     function cartClear(){ CART.clear(); updateCartUI(); saveCart(); }
     function cartTotals(){ let lines=0,total=0; CART.forEach(v=>{lines+=1; total+=v.qty*v.price;}); return {lines,total}; }
     function updateCartUI(){
       const {lines,total}=cartTotals();
-      cartBadge.textContent=lines;
-      cartCount.textContent=String(lines);
-      cartTotal.textContent=fmt(total);
-      drawerTotal.textContent=fmt(total);
+      cartBadge.textContent=lines; cartCount.textContent=String(lines); cartTotal.textContent=fmt(total); drawerTotal.textContent=fmt(total);
       renderDrawer();
+      // refresh per-card UI
       $$(".card").forEach(card=>{
         const sku=card.getAttribute("data-sku"); const v=CART.get(sku);
         const sumEl=$(".sum",card); const qtyIn=$(".qty",card);
         const stock=+card.getAttribute("data-stock"); const overWrap=$(".overwrap",card);
         if(v && v.qty>0){
           sumEl.textContent="Сумма: "+fmt(v.qty*(+card.getAttribute("data-price"))); sumEl.classList.remove("hidden");
-          qtyIn.value=v.qty;
+          if(!qtyIn.matches(":focus")) qtyIn.value=v.qty;
           overWrap.classList.toggle("hidden", !(v.qty>stock)); overWrap.title=`Склад: ${stock}`;
         }else{
           sumEl.classList.add("hidden");
@@ -350,8 +349,8 @@
           </div>
           <div class="line-qty">
             ${img?`<img src="${img}" style="width:40px;height:40px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff">`:``}
-            <input type="number" class="qty" min="0" step="1" value="${v.qty}" data-sku="${sku}">
-            <button class="btn" data-del="${sku}" title="Удалить">✕</button>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" class="qty" value="${v.qty}" data-sku="${sku}">
+            <button class="btn btn-red" data-del="${sku}" title="Удалить">🗑️</button>
             <span class="sum">${fmt(v.qty*v.price)}</span>
             <span class="overwrap ${v.qty>stock?"":"hidden"}" title="Склад: ${stock}"><span class="overdot"></span></span>
           </div>`;
@@ -359,7 +358,7 @@
       });
     }
 
-    /* ------------ Render list & details ------------ */
+    /* Render list & details */
     function renderList(){
       viewList.classList.remove("hidden"); viewDetail.classList.add("hidden");
       const data=sortOffers(currentFiltered());
@@ -379,23 +378,14 @@
         const badgeText=o.stock>0?"В наличии":"Нет в наличии";
         const imgUrl=IMG_MAP.get(o.sku)||"";
         const hasDetails=DETAIL_MAP.has(o.sku);
-        const inCart=CART.get(o.sku);
-        const currQty=inCart?.qty||"";
+        const v=CART.get(o.sku);
 
         card.innerHTML=`
           <div class="row1">
-            <div class="sku">Артикул: ${o.sku}</div>
+            <div class="sku">${o.sku}</div>
             <span class="badge ${badgeClass}">${badgeText}</span>
           </div>
           <div class="model">${o.model}</div>
-          <div class="micro">
-            ${hasDetails ? `
-              <a href="#sku=${encodeURIComponent(o.sku)}">Подробнее</a>
-              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=tech">Тех</a>
-              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=log">Лог</a>
-              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=marketing">Маркетинг</a>
-            ` : `<span class="muted">Нет доп. данных</span>`}
-          </div>
           <div class="meta">
             <div class="leftMeta">
               ${imgUrl && imgsOn ? `<img class="thumb" loading="lazy" src="${imgUrl}" alt="${o.model}">` : ``}
@@ -405,27 +395,36 @@
           </div>
 
           <div class="cart-ctl">
-            <input type="number" class="qty" min="0" step="1" placeholder="шт." value="${currQty}">
-            <button class="btn" data-add="1" title="Добавить">＋</button>
-            <!-- removed minus button by request -->
-            <button class="btn" data-clear="1" title="Очистить позицию">✕</button>
-            <span class="sum ${inCart&&inCart.qty>0?"":"hidden"}">${inCart?("Сумма: "+fmt(inCart.qty*o.price)):""}</span>
-            <span class="overwrap ${inCart&&inCart.qty>o.stock?"":"hidden"}" title="Склад: ${o.stock}"><span class="overdot"></span></span>
+            <button class="btn btn-red" data-clear="1" title="Очистить позицию">🗑️</button>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" class="qty" placeholder="шт." value="${v?v.qty:""}">
+            <button class="btn btn-green" data-set="1" title="Добавить в корзину">🛒</button>
+            <span class="sum ${v&&v.qty>0?"":"hidden"}">${v?("Сумма: "+fmt(v.qty*o.price)):""}</span>
+            <span class="overwrap ${v&&v.qty>o.stock?"":"hidden"}" title="Склад: ${o.stock}"><span class="overdot"></span></span>
+          </div>
+
+          <div class="micro">
+            ${hasDetails ? `<a href="#sku=${encodeURIComponent(o.sku)}">Подробнее</a>` : `<span class="muted">Нет доп. данных</span>`}
           </div>
         `;
         if(imgUrl && imgsOn){ $(".thumb",card)?.addEventListener("click", ()=>{ $("#lightboxImg").src=imgUrl; $("#lightbox").style.display='flex'; }); }
 
         const qtyInput=$(".qty",card);
-        $(".btn[data-add]",card).addEventListener("click", ()=>{ const qty=+qtyInput.value||0; if(qty>0) cartAdd(o.sku, qty, o.price, o.model); });
-        $(".btn[data-clear]",card).addEventListener("click", ()=>{ cartSet(o.sku, 0, o.price, o.model); });
+        // sanitize to digits only as user types, but don't rerender
+        qtyInput.addEventListener("input", ()=>{ qtyInput.value = qtyInput.value.replace(/\D+/g,"").slice(0,6); });
+
+        // Set exact qty (NOT add) when green button pressed
+        $(".btn.btn-green",card).addEventListener("click", ()=>{
+          const qStr=qtyInput.value.trim(); const qty = qStr==="" ? 0 : Math.max(0, parseInt(qStr,10));
+          cartSet(o.sku, qty, o.price, o.model);
+        });
+
+        // Clear this SKU
+        $(".btn.btn-red[data-clear]",card).addEventListener("click", ()=>{ cartSet(o.sku, 0, o.price, o.model); });
 
         frag.appendChild(card);
       }
       list.appendChild(frag);
       stats.textContent=`Показано ${data.length} / ${OFFERS.length}${onlyInStock.checked?" • только в наличии":""}${showImages.checked?"":" • без изображений"}`;
-
-      togStock.classList.toggle("active", onlyInStock.checked);
-      togImages.classList.toggle("active", showImages.checked);
       updateCartUI();
     }
 
@@ -444,19 +443,21 @@
         <div class="hero">${imgUrl?`<img id="heroImg" loading="lazy" src="${imgUrl}" alt="${o?o.model:""}">`:""}${o?`<div class="muted">Остаток: ${o.stock}</div>`:""}</div>`;
       $("#heroImg")?.addEventListener("click", ()=>{ $("#lightboxImg").src=imgUrl; $("#lightbox").style.display='flex'; });
 
-      const tabs=[{id:"details",label:"Подробнее"},{id:"tech",label:"Тех"},{id:"log",label:"Лог"},{id:"marketing",label:"Маркетинг"}];
-      tabsEl.innerHTML=""; tabs.forEach(t=>{ const b=document.createElement("button"); b.className="tabbtn"+(t.id===tab?" active":""); b.textContent=t.label;
-        b.addEventListener("click", ()=>{ const base=`#sku=${encodeURIComponent(sku)}`; location.replace(t.id==="details"?base:`${base}&tab=${t.id}`); }); tabsEl.appendChild(b); });
+      // Only one tab now: Подробнее (others are inside)
+      const tabs=[{id:"details",label:"Подробнее"}];
+      tabsEl.innerHTML=""; tabs.forEach(t=>{ const b=document.createElement("button"); b.className="tabbtn active"; b.textContent=t.label; b.disabled=true; tabsEl.appendChild(b); });
 
       let html="";
-      if(tab==="details"){ const bullets=sanitizeBullets(d.add); html+= bullets.length?`<div class="block"><ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:`<div class="muted">Нет кратких пунктов</div>`; }
-      if(tab==="tech"){ html+= d.tech?`<div class="block"><pre>${d.tech}</pre></div>`:`<div class="muted">Нет данных</div>`; }
-      if(tab==="log"){ html+= d.log?`<div class="block"><pre>${d.log}</pre></div>`:`<div class="muted">Нет данных</div>`; }
-      if(tab==="marketing"){ html+= d.marketing?`<div class="block"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>`:`<div class="muted">Нет данных</div>`; }
-      tabpanel.innerHTML=html;
+      const bullets=sanitizeBullets(d.add);
+      html += bullets.length?`<div class="block"><ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:"";
+      if(d.tech) html += `<div class="block"><pre>${d.tech}</pre></div>`;
+      if(d.log) html += `<div class="block"><pre>${d.log}</pre></div>`;
+      if(d.marketing) html += `<div class="block"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>`;
+      if(!html) html = `<div class="muted">Нет доп. данных</div>`;
+      tabpanel.innerHTML = html;
     }
 
-    /* ------------ Exports (main list) ------------ */
+    /* Exports (main list) — unchanged from previous version */
     function exportExcel(rows){
       const out = rows.map(o=>{
         const d = DETAIL_MAP.get(o.sku) || {};
@@ -490,35 +491,20 @@
       xml+=`</items>`; downloadBlob("einhell_price.xml","application/xml;charset=utf-8",xml);
     }
 
-    /* ------------ Cart export ------------ */
-    function exportCartExcel(){
-      if(CART.size===0) return;
-      const rows=[];
-      CART.forEach((v,sku)=>{
-        const o=OFFERS.find(x=>x.sku===sku);
-        rows.push({ SKU:sku, Model:o?o.model:v.model, Price:v.price, Qty:v.qty, Sum:v.qty*v.price });
-      });
-      const wb=XLSX.utils.book_new(); const ws=XLSX.utils.json_to_sheet(rows);
-      ws["!cols"]=[{wch:12},{wch:50},{wch:12},{wch:8},{wch:14}];
-      XLSX.utils.book_append_sheet(wb, ws, "Cart");
-      const def=`order_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`;
-      const name=prompt("Имя файла:", def) || def;
-      XLSX.writeFile(wb, name);
-    }
-
-    /* ------------ Router ------------ */
+    /* Router */
     function parseHash(){ const h=location.hash.replace(/^#/,""); if(h.includes("sku=")){ const sp=new URLSearchParams(h); return {sku:sp.get("sku"), tab:(sp.get("tab")||"details")}; } return {sku:null,tab:null};}
     function renderRoute(){ const {sku,tab}=parseHash(); if(sku){ renderDetail(sku,tab||"details"); } else { renderList(); } }
 
-    /* ------------ Init ------------ */
+    /* Init & events */
     async function init(){
       try{
+        updateOffsets();
         stats.textContent="Загрузка…";
         loadCart();
         await Promise.all([fetchImages(), fetchDetails()]);
         const xml=await fetchXML(); OFFERS=parseOffers(xml);
         if(OFFERS.length===0) throw new Error("Parsed 0 offers");
-        footer.textContent="Обновлено: " + new Date().toLocaleString();
+        $("#footer").textContent="Обновлено: " + new Date().toLocaleString();
         errorBox.hidden=true;
         renderRoute();
       }catch(err){
@@ -527,7 +513,6 @@
       }
     }
 
-    /* ------------ Events ------------ */
     q.addEventListener("input",debounce(()=>{ if(!location.hash) renderList(); },220));
     onlyInStock.addEventListener("change",()=>{ if(!location.hash) renderList(); });
     showImages.addEventListener("change",()=>{ if(!location.hash) renderList(); });
@@ -545,20 +530,32 @@
       }
     });
 
-    // Toggle button visuals
-    togStock.addEventListener("click", (e)=>{ if(e.target.tagName!=="INPUT"){ onlyInStock.checked=!onlyInStock.checked; } renderList(); });
-    togImages.addEventListener("click", (e)=>{ if(e.target.tagName!=="INPUT"){ showImages.checked=!showImages.checked; } renderList(); });
-
     // Drawer
-    openCart.addEventListener("click", ()=>{ drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false"); });
-    closeCart.addEventListener("click", ()=>{ drawer.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); });
-    drawerClear.addEventListener("click", ()=> cartClear());
-    clearCart.addEventListener("click", ()=> cartClear());
-    exportCart.addEventListener("click", ()=> exportCartExcel());
+    $("#openCart").addEventListener("click", ()=>{ drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false"); });
+    $("#closeCart").addEventListener("click", ()=>{ drawer.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); });
+    $("#drawerClear").addEventListener("click", ()=> cartClear());
+    $("#clearCart").addEventListener("click", ()=> cartClear());
+    $("#exportCart").addEventListener("click", ()=>{
+      if(CART.size===0) return;
+      const rows=[];
+      CART.forEach((v,sku)=>{
+        const o=OFFERS.find(x=>x.sku===sku);
+        rows.push({ SKU:sku, Model:o?o.model:v.model, Price:v.price, Qty:v.qty, Sum:v.qty*v.price });
+      });
+      const wb=XLSX.utils.book_new(); const ws=XLSX.utils.json_to_sheet(rows);
+      ws["!cols"]=[{wch:12},{wch:50},{wch:12},{wch:8},{wch:14}];
+      XLSX.utils.book_append_sheet(wb, ws, "Cart");
+      const def=`order_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`;
+      const name=prompt("Имя файла:", def) || def;
+      XLSX.writeFile(wb, name);
+    });
     drawerBody.addEventListener("input", (e)=>{
       if(e.target.classList.contains("qty")){
         const sku=e.target.getAttribute("data-sku"); const v=CART.get(sku); if(!v) return;
-        const q=+e.target.value||0; cartSet(sku, q, v.price, v.model);
+        // digits only, set exact qty
+        e.target.value = e.target.value.replace(/\D+/g,"").slice(0,6);
+        const qval = e.target.value ? parseInt(e.target.value,10) : 0;
+        cartSet(sku, qval, v.price, v.model);
       }
     });
     drawerBody.addEventListener("click", (e)=>{
@@ -566,7 +563,6 @@
     });
 
     window.addEventListener("hashchange", renderRoute);
-
     setInterval(init,30*60*1000);
     init();
   </script>
