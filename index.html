@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,29 +8,58 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    :root{ --brand:#E2001A; --ink:#111111; --bg:#ffffff; --card:#f8f9fb; --muted:#6b7280; --ok:#2e7d32; --warn:#b91c1c; --accent:#111111; --radius:14px; }
+    :root{
+      /* Light theme */
+      --brand:#E2001A; --ink:#111111; --bg:#ffffff; --card:#f8f9fb;
+      --muted:#6b7280; --ok:#2e7d32; --warn:#b91c1c; --accent:#111111;
+      --border:#e5e7eb; --chip:#111111; --chipText:#ffffff;
+      --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.08);
+      --badge:#2563eb; --over:#ef4444;
+      --input:#fff; --inputText:#111;
+    }
+    /* Dark theme overrides */
+    html[data-theme="dark"]{
+      --ink:#e5e7eb; --bg:#0b0c0f; --card:#121318; --muted:#9aa0a6;
+      --accent:#e5e7eb; --border:#21242c; --chip:#e5e7eb; --chipText:#0b0c0f;
+      --shadow:0 1px 3px rgba(0,0,0,.5); --input:#0f1116; --inputText:#e5e7eb;
+    }
+
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
 
-    header{ position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px }
+    /* HEADER */
+    header{ position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;
+      padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px }
     .logo{height:28px;width:auto;display:block;background:#fff;padding:4px;border-radius:6px}
-    .titles{display:flex;flex-direction:column;gap:2px}
+    .titles{display:flex;flex-direction:column;gap:2px;flex:1}
     .title{font-weight:800;font-size:18px;letter-spacing:.2px}
     .sub{font-size:12px;opacity:.95}
+    .hdr-actions{display:flex;align-items:center;gap:8px}
+    .chip{background:var(--chip); color:var(--chipText); font-size:12px; padding:6px 10px; border-radius:999px; white-space:nowrap}
 
-    .controls{padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border-bottom:1px solid #eee}
+    /* CONTROLS */
+    .controls{padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:58px;z-index:15}
     .search{flex:1 1 260px;position:relative}
-    .search input{width:100%;padding:12px 40px 12px 12px;font-size:16px;border:1px solid #e5e7eb;border-radius:10px;outline:none}
+    .search input{width:100%;padding:12px 40px 12px 12px;font-size:16px;border:1px solid var(--border);border-radius:10px;outline:none;background:var(--input);color:var(--inputText)}
     .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:18px;cursor:pointer;color:#9ca3af;padding:6px}
     .toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:#374151}
+    html[data-theme="dark"] .toggle{color:var(--muted)}
     .sort{display:flex;align-items:center;gap:6px}
-    select{padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
-    .btn{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer}
+    select{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
+    .btn{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText);cursor:pointer}
     .btn:active{transform:scale(0.99)}
+    .btn-brand{background:#111;color:#fff;border-color:#111}
+    html[data-theme="dark"] .btn-brand{background:#fff;color:#111;border-color:#fff}
 
-    .stats{padding:6px 14px;font-size:13px;color:var(--muted)}
+    /* CART ICON */
+    .cart-btn{display:flex;align-items:center;gap:6px;border-radius:999px;padding:8px 10px;border:1px solid var(--border);background:var(--input);cursor:pointer}
+    .cart-dot{display:inline-block;width:8px;height:8px;border-radius:999px;background:#22c55e}
+    .cart-badge{font-weight:700}
+
+    /* LIST */
+    .stats{padding:6px 14px;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .list{padding:8px 10px 18px;display:grid;gap:10px}
-    .card{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .card{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
     .card.oos{opacity:.45;filter:grayscale(100%)}
     .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
     .sku{font-weight:800;font-size:15px}
@@ -42,34 +71,41 @@
     .micro a:hover{text-decoration:underline}
 
     .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
-    .leftMeta{display:flex;align-items:center;gap:12px}
-    .thumb{width:70px;height:70px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #eee;cursor:pointer}
+    .leftMeta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .thumb{width:70px;height:70px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid var(--border);cursor:pointer}
     .thumb[hidden]{display:none}
     .price{color:var(--accent);font-weight:800}
     .stock{font-weight:800}
 
+    /* CART CONTROLS ON CARD */
+    .cart-ctl{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .qty{width:88px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--inputText)}
+    .sum{font-weight:800}
+    .warn{color:var(--over);font-size:12px;display:flex;align-items:center;gap:6px}
+
     @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
     @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
 
+    /* DETAIL (unchanged look) */
     .detail{padding:12px}
     .detail .topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    .back{border:none;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;cursor:pointer}
-    .detail .head{background:var(--card);border-radius:var(--radius);padding:12px;display:grid;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .back{border:none;background:var(--input);color:var(--inputText);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer}
+    .detail .head{background:var(--card);border-radius:var(--radius);padding:12px;display:grid;gap:10px;box-shadow:var(--shadow);border:1px solid var(--border)}
     .detail .head.oos{opacity:.65;filter:grayscale(100%)}
     .detail .hrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
     .detail .title1{font-weight:800}
     .detail .hero{display:flex;gap:14px;align-items:center}
-    .detail .hero img{width:120px;height:120px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #eee;cursor:pointer}
+    .detail .hero img{width:120px;height:120px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid var(--border);cursor:pointer}
 
     .tabs{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
-    .tabbtn{padding:8px 10px;border:1px solid #e5e7eb;border-radius:999px;background:#fff;cursor:pointer;font-size:13px}
+    .tabbtn{padding:8px 10px;border:1px solid var(--border);border-radius:999px;background:var(--input);color:var(--inputText);cursor:pointer;font-size:13px}
     .tabbtn.active{background:#111;color:#fff;border-color:#111}
-    .tabpanel{margin-top:10px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+    html[data-theme="dark"] .tabbtn.active{background:#fff;color:#111;border-color:#fff}
+    .tabpanel{margin-top:10px;background:var(--input);color:var(--inputText);border:1px solid var(--border);border-radius:12px;padding:12px}
 
-    /* Blocks (used by Подробнее/Тех/Лог) */
-    .block{background:#f9fafb;border:1px solid #eee;border-radius:8px;padding:10px}
+    .block{background:#0f1116; border:1px solid var(--border); border-radius:8px; padding:10px}
+    html[data-theme="light"] .block{background:#f9fafb}
     .block pre{white-space:pre-wrap;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-    /* Подробнее list styled as a block with bullets */
     .bullets{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;list-style:disc;padding-left:18px;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     .bullets li{margin:0;line-height:1.35}
     @media(max-width:720px){ .bullets{grid-template-columns:1fr} }
@@ -77,8 +113,20 @@
     .footer{padding:20px 14px;text-align:center;color:var(--muted);font-size:12px}
     .error{color:#b91c1c;padding:12px 14px}
 
+    /* LIGHTBOX */
     .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:50}
     .lightbox img{max-width:92vw;max-height:90vh;background:#fff;border-radius:10px;padding:6px}
+
+    /* CART DRAWER */
+    .drawer{position:fixed;top:0;right:0;width:360px;max-width:92vw;height:100vh;background:var(--bg);border-left:1px solid var(--border);box-shadow:-4px 0 16px rgba(0,0,0,.25);transform:translateX(100%);transition:.25s;z-index:60;display:flex;flex-direction:column}
+    .drawer.open{transform:translateX(0)}
+    .drawer header{background:var(--bg);color:var(--ink);box-shadow:none;border-bottom:1px solid var(--border);position:static}
+    .drawer .body{padding:10px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+    .line{border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--card)}
+    .line-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    .line-qty{display:flex;align-items:center;gap:6px}
+    .drawer .footer{margin-top:auto;border-top:1px solid var(--border);padding:12px}
+    .muted{color:var(--muted)}
   </style>
 </head>
 <body>
@@ -87,6 +135,13 @@
     <div class="titles">
       <div class="title">Остатки Einhell</div>
       <div class="sub">Поиск по артикулу или модели.</div>
+    </div>
+    <div class="hdr-actions">
+      <span id="updatedTop" class="chip">—</span>
+      <button id="themeToggle" class="btn-brand" title="Темная тема">🌗</button>
+      <button id="openCart" class="cart-btn" title="Корзина">
+        🛒 <span class="cart-badge" id="cartBadge">0</span><span class="cart-dot"></span>
+      </button>
     </div>
   </header>
 
@@ -97,10 +152,8 @@
         <input id="q" type="text" placeholder="Ввести Артикул (например, 4513812) или Модель (например, TE-CD 18/40)…" autocomplete="off" />
         <button class="clear-btn" id="clear" title="Очистить">✕</button>
       </div>
-
       <label class="toggle"><input type="checkbox" id="onlyInStock" /> Только в наличии</label>
       <label class="toggle"><input type="checkbox" id="showImages" /> Вкл. изображения</label>
-
       <div class="sort">
         <select id="sortKey" title="Сортировка">
           <option value="default">Сортировка: по умолчанию</option>
@@ -110,7 +163,6 @@
           <option value="stock_asc">Остаток ↑</option>
         </select>
       </div>
-
       <div class="sort">
         <select id="downloadFmt" title="Формат выгрузки">
           <option value="xlsx">Excel (.xlsx)</option>
@@ -120,6 +172,10 @@
         </select>
         <button class="btn" id="btnDownload">Скачать</button>
       </div>
+      <div class="sort" id="cartSummary" style="margin-left:auto;font-weight:700">
+        🧺 <span id="cartCount">0 поз.</span> • <span id="cartTotal">0 ₸</span>
+        <button class="btn" id="clearCart" title="Очистить корзину">Очистить</button>
+      </div>
     </div>
 
     <div class="stats" id="stats">Загрузка…</div>
@@ -127,7 +183,7 @@
     <div class="list" id="list"></div>
   </div>
 
-  <!-- DETAIL VIEW -->
+  <!-- DETAIL VIEW (unchanged) -->
   <div id="view-detail" class="detail" hidden>
     <div class="topbar">
       <button class="back" id="btnBack">← Назад</button>
@@ -144,95 +200,93 @@
     <img id="lightboxImg" alt="preview">
   </div>
 
+  <!-- CART DRAWER -->
+  <aside class="drawer" id="drawer">
+    <header>
+      <div class="titles">
+        <div class="title" style="color:var(--ink)">Корзина</div>
+        <div class="sub" style="color:var(--muted)">Редактируйте количество и выгружайте в Excel</div>
+      </div>
+      <div class="hdr-actions">
+        <button class="btn" id="closeCart">Закрыть</button>
+      </div>
+    </header>
+    <div class="body" id="drawerBody"></div>
+    <div class="footer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><b>Итого:</b> <span id="drawerTotal">0 ₸</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="drawerClear">Очистить</button>
+          <button class="btn-brand" id="exportCart">Выгрузить Excel</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <script>
     const XML_URL = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
-    const IMAGES_CSV_URL = "./images.csv";     // sku,url
-    const DETAILS_CSV_URL = "./add_data.csv";  // sku,tech,log,marketing,add
+    const IMAGES_CSV_URL = "./images.csv";
+    const DETAILS_CSV_URL = "./add_data.csv";
 
-    function formatTenge(n){ if (isNaN(n)) return n; return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸"; }
-    function debounce(fn,ms=220){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
-    function getByLocalName(node, local){ return Array.from(node.getElementsByTagNameNS("*", local)); }
-    function firstByLocalName(node, local){ const a=getByLocalName(node, local); return a.length?a[0]:null; }
-    function escCSV(v){ const s=String(v??""); return /[",;\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
+    const $ = (s,root=document)=>root.querySelector(s);
+    const $$ = (s,root=document)=>Array.from(root.querySelectorAll(s));
+    const fmt = n => isNaN(n) ? n : new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(+n) + " ₸";
+    const debounce = (fn,ms=220)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
+    const getByLocalName = (node, local)=>Array.from(node.getElementsByTagNameNS("*", local));
+    const firstByLocalName = (node, local)=>{const a=getByLocalName(node, local);return a.length?a[0]:null};
+    const escCSV = v => { const s=String(v??""); return /[",;\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
     function downloadBlob(filename, mime, data){ const blob=new Blob([data],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); }
 
-    const viewList = document.getElementById("view-list");
-    const viewDetail = document.getElementById("view-detail");
-    const q=document.getElementById("q");
-    const clearBtn=document.getElementById("clear");
-    const onlyInStock=document.getElementById("onlyInStock");
-    const showImages=document.getElementById("showImages");
-    const sortKey=document.getElementById("sortKey");
-    const downloadFmt=document.getElementById("downloadFmt");
-    const btnDownload=document.getElementById("btnDownload");
-    const list=document.getElementById("list");
-    const stats=document.getElementById("stats");
-    const errorBox=document.getElementById("error");
-    const footer=document.getElementById("footer");
-    const lightbox=document.getElementById("lightbox");
-    const lightboxImg=document.getElementById("lightboxImg");
-    const btnBack=document.getElementById("btnBack");
-    const detailHead=document.getElementById("detail-head");
-    const tabsEl=document.getElementById("tabs");
-    const tabpanel=document.getElementById("tabpanel");
+    // DOM
+    const updatedTop=$("#updatedTop"), footer=$("#footer");
+    const viewList=$("#view-list"), viewDetail=$("#view-detail");
+    const q=$("#q"), clearBtn=$("#clear"), onlyInStock=$("#onlyInStock"), showImages=$("#showImages");
+    const sortKey=$("#sortKey"), downloadFmt=$("#downloadFmt"), btnDownload=$("#btnDownload");
+    const list=$("#list"), stats=$("#stats"), errorBox=$("#error");
+    const lightbox=$("#lightbox"), lightboxImg=$("#lightboxImg");
+    const btnBack=$("#btnBack"), detailHead=$("#detail-head"), tabsEl=$("#tabs"), tabpanel=$("#tabpanel");
+    const openCart=$("#openCart"), closeCart=$("#closeCart"), drawer=$("#drawer"), drawerBody=$("#drawerBody");
+    const drawerTotal=$("#drawerTotal"), drawerClear=$("#drawerClear"), exportCart=$("#exportCart");
+    const cartBadge=$("#cartBadge"), cartCount=$("#cartCount"), cartTotal=$("#cartTotal"), clearCart=$("#clearCart");
+    const themeToggle=$("#themeToggle");
 
-    let OFFERS=[];          
-    let IMG_MAP=new Map();  
-    let DETAIL_MAP=new Map();
+    // Data
+    let OFFERS=[], IMG_MAP=new Map(), DETAIL_MAP=new Map();
+    // Cart: sku -> {qty, price, model}
+    const CART=new Map();
 
+    // THEME
+    const applyTheme = t => document.documentElement.setAttribute('data-theme', t);
+    themeToggle.addEventListener('click', ()=>{
+      const cur=document.documentElement.getAttribute('data-theme')||'light';
+      const next=cur==='light'?'dark':'light';
+      applyTheme(next); localStorage.setItem('theme', next);
+    });
+    applyTheme(localStorage.getItem('theme')||'light');
+
+    // Fetch helpers
     async function fetchText(url){
       const res = await fetch(url + "?t=" + Date.now(), { cache:"no-store" });
       if(!res.ok) throw new Error("HTTP " + res.status + " for " + url);
       return res.text();
     }
-    async function fetchXML(){
-      const txt = await fetchText(XML_URL);
-      const xml = new DOMParser().parseFromString(txt,"application/xml");
-      if (xml.querySelector("parsererror")) throw new Error("XML parse error");
-      return xml;
-    }
-    async function fetchImagesMap(){
-      try{
-        const csvTxt = await fetchText(IMAGES_CSV_URL);
-        const parsed = Papa.parse(csvTxt, { header:true, skipEmptyLines:true });
-        IMG_MAP.clear();
-        (parsed.data||[]).forEach(row=>{
-          const sku=(row.sku||"").trim(); const url=(row.url||"").trim();
-          if(sku && url && url!=="-") IMG_MAP.set(sku, url);
-        });
-      }catch(e){ console.warn("images.csv not loaded:", e.message); IMG_MAP.clear(); }
-    }
-    async function fetchDetailsMap(){
-      try{
-        const csvTxt = await fetchText(DETAILS_CSV_URL);
-        const parsed = Papa.parse(csvTxt, { header:true, skipEmptyLines:false });
-        DETAIL_MAP.clear();
-        (parsed.data||[]).forEach(row=>{
-          const sku=(row.sku||"").trim();
-          if(!sku) return;
-          DETAIL_MAP.set(sku, {
-            tech: (row.tech||"").trim(),
-            log: (row.log||"").trim(),
-            marketing: (row.marketing||"").trim(),
-            add: (row.add||"").trim()
-          });
-        });
-      }catch(e){ console.warn("add_data.csv not loaded:", e.message); DETAIL_MAP.clear(); }
-    }
+    async function fetchXML(){ const txt=await fetchText(XML_URL); const xml=new DOMParser().parseFromString(txt,"application/xml"); if(xml.querySelector("parsererror")) throw new Error("XML parse error"); return xml; }
+    async function fetchImages(){ try{ const csv=await fetchText(IMAGES_CSV_URL); const p=Papa.parse(csv,{header:true,skipEmptyLines:true}); IMG_MAP.clear(); (p.data||[]).forEach(r=>{const s=(r.sku||"").trim(), u=(r.url||"").trim(); if(s&&u&&u!=="-") IMG_MAP.set(s,u);}); }catch(e){ IMG_MAP.clear();}}
+    async function fetchDetails(){ try{ const csv=await fetchText(DETAILS_CSV_URL); const p=Papa.parse(csv,{header:true,skipEmptyLines:false}); DETAIL_MAP.clear(); (p.data||[]).forEach(r=>{const s=(r.sku||"").trim(); if(!s) return; DETAIL_MAP.set(s,{tech:(r.tech||"").trim(),log:(r.log||"").trim(),marketing:(r.marketing||"").trim(),add:(r.add||"").trim()});}); }catch(e){ DETAIL_MAP.clear();}}
 
     function parseOffers(xml){
-      const offers = getByLocalName(xml, "offer").map(offer=>{
-        const sku = offer.getAttribute("sku") || "";
-        const model = (firstByLocalName(offer, "model")?.textContent || "").trim();
-        const modelLC = model.toLowerCase();
-        const av = firstByLocalName(offer, "availability");
-        const available = (av?.getAttribute("available") || "no").toLowerCase()==="yes";
-        const stock = Number(av?.getAttribute("stockCount") || "0");
-        const price = Number((firstByLocalName(offer, "price")?.textContent || "0").replace(/[^\d]/g,""));
-        return { sku, model, modelLC, available, stock, price };
+      return getByLocalName(xml, "offer").map(offer=>{
+        const sku=offer.getAttribute("sku")||"";
+        const model=(firstByLocalName(offer,"model")?.textContent||"").trim();
+        const modelLC=model.toLowerCase();
+        const av=firstByLocalName(offer,"availability");
+        const available=(av?.getAttribute("available")||"no").toLowerCase()==="yes";
+        const stock=Number(av?.getAttribute("stockCount")||"0");
+        const price=Number((firstByLocalName(offer,"price")?.textContent||"0").replace(/[^\d]/g,""));
+        return {sku,model,modelLC,available,stock,price};
       });
-      return offers;
     }
+
     function sortOffers(arr){
       switch (sortKey.value){
         case "price_desc": return arr.slice().sort((a,b)=> b.price - a.price);
@@ -243,61 +297,158 @@
       }
     }
     function currentFiltered(){
-      const term = q.value.trim().toLowerCase();
+      const term=q.value.trim().toLowerCase();
       return OFFERS.filter(o=>{
-        const hit = o.sku.includes(term) || o.modelLC.includes(term);
+        const hit=o.sku.includes(term)||o.modelLC.includes(term);
         return hit && (!onlyInStock.checked || o.stock>0);
       });
     }
 
+    // ---------- CART ----------
+    function cartSet(sku, qty, price, model){
+      if(qty<=0){ CART.delete(sku); } else { CART.set(sku,{qty:+qty, price:+price, model}); }
+      updateCartUI();
+    }
+    function cartAdd(sku, delta, price, model){
+      const cur=CART.get(sku)?.qty||0;
+      cartSet(sku, cur+delta, price, model);
+    }
+    function cartClear(){ CART.clear(); updateCartUI(); }
+    function cartTotals(){
+      let lines=0, total=0;
+      CART.forEach(v=>{ lines+=1; total+=v.qty*v.price; });
+      return {lines,total};
+    }
+    function updateCartUI(){
+      const {lines,total}=cartTotals();
+      cartBadge.textContent=lines;
+      cartCount.textContent=`${lines} поз.`;
+      cartTotal.textContent=fmt(total);
+      drawerTotal.textContent=fmt(total);
+      renderDrawer();
+      // also repaint sums on visible cards without full rerender (lightweight)
+      $$(".card").forEach(card=>{
+        const sku=card.getAttribute("data-sku");
+        if(!sku) return;
+        const v=CART.get(sku);
+        const sumEl=$(".sum",card);
+        if(v && v.qty>0){
+          sumEl.textContent="Сумма: "+fmt(v.qty* ( +card.getAttribute("data-price") ));
+          sumEl.hidden=false;
+        } else if(sumEl){ sumEl.hidden=true; }
+        const qtyIn=$(".qty",card); if(qtyIn && v) qtyIn.value=v.qty; else if(qtyIn && !v) qtyIn.value="";
+        const warn=$(".warn",card);
+        const stock=+card.getAttribute("data-stock");
+        warn.hidden=!(v && v.qty>stock);
+      });
+    }
+    function renderDrawer(){
+      drawerBody.innerHTML="";
+      if(CART.size===0){ drawerBody.innerHTML = `<div class="muted">Корзина пуста</div>`; return; }
+      CART.forEach((v,sku)=>{
+        const o=OFFERS.find(x=>x.sku===sku);
+        const line=document.createElement("div");
+        line.className="line";
+        const stock=o?o.stock:0, img=IMG_MAP.get(sku)||"";
+        line.innerHTML=`
+          <div class="line-top">
+            <div><b>${sku}</b> • ${o?o.model:v.model}</div>
+            <div>${fmt(v.price)}</div>
+          </div>
+          <div class="line-qty">
+            ${img?`<img src="${img}" style="width:44px;height:44px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff">`:``}
+            <input type="number" class="qty" min="0" step="1" value="${v.qty}" data-sku="${sku}">
+            <button class="btn" data-del="${sku}">Удалить</button>
+            <span class="sum">${fmt(v.qty*v.price)}</span>
+            <span class="warn" ${v.qty>stock?"":"hidden"}>⚠ Перебронировано (склад: ${stock})</span>
+          </div>`;
+        drawerBody.appendChild(line);
+      });
+    }
+
+    // ---------- RENDER LIST ----------
     function renderList(){
       viewList.hidden=false; viewDetail.hidden=true;
-      const data = sortOffers(currentFiltered());
+      const data=sortOffers(currentFiltered());
       list.innerHTML="";
       if(!data.length){
         list.innerHTML = `<div class="card"><div class="model">Ничего не найдено. Попробуйте другой артикул или модель.</div></div>`;
-      }else{
-        const imgsOn = showImages.checked;
-        const frag = document.createDocumentFragment();
-        for(const o of data){
-          const card = document.createElement("div");
-          card.className = "card";
-          if (o.stock===0) card.classList.add("oos");
-          const badgeClass=o.stock>0?"ok":"no";
-          const badgeText=o.stock>0?"В наличии":"Нет в наличии";
-          const imgUrl = IMG_MAP.get(o.sku) || "";
-          const hasDetails = DETAIL_MAP.has(o.sku);
-
-          card.innerHTML = `
-            <div class="row1">
-              <div class="sku">Артикул: ${o.sku}</div>
-              <span class="badge ${badgeClass}">${badgeText}</span>
-            </div>
-            <div class="model">${o.model}</div>
-            <div class="micro">
-              ${hasDetails ? `
-                <a href="#sku=${encodeURIComponent(o.sku)}">Подробнее</a>
-                · <a href="#sku=${encodeURIComponent(o.sku)}&tab=tech">Тех</a>
-                · <a href="#sku=${encodeURIComponent(o.sku)}&tab=log">Лог</a>
-                · <a href="#sku=${encodeURIComponent(o.sku)}&tab=marketing">Маркетинг</a>
-              ` : `<span style="color:#6b7280">Нет доп. данных</span>`}
-            </div>
-            <div class="meta">
-              <div class="leftMeta">
-                ${imgUrl && imgsOn ? `<img class="thumb" loading="lazy" src="${imgUrl}" alt="${o.model}">` : ``}
-                <div class="stock">Кол-во: ${o.stock}</div>
-              </div>
-              <div class="price">${formatTenge(o.price)}</div>
-            </div>
-          `;
-          if (imgUrl && imgsOn){
-            const img = card.querySelector(".thumb");
-            img?.addEventListener("click", ()=>{ lightboxImg.src = imgUrl; lightbox.style.display='flex'; });
-          }
-          frag.appendChild(card);
-        }
-        list.appendChild(frag);
+        stats.textContent="—";
+        return;
       }
+      const imgsOn=showImages.checked;
+      const frag=document.createDocumentFragment();
+      for(const o of data){
+        const card=document.createElement("div");
+        card.className="card";
+        card.setAttribute("data-sku",o.sku);
+        card.setAttribute("data-price",o.price);
+        card.setAttribute("data-stock",o.stock);
+        if (o.stock===0) card.classList.add("oos");
+
+        const badgeClass=o.stock>0?"ok":"no";
+        const badgeText=o.stock>0?"В наличии":"Нет в наличии";
+        const imgUrl=IMG_MAP.get(o.sku)||"";
+        const hasDetails=DETAIL_MAP.has(o.sku);
+
+        const inCart=CART.get(o.sku);
+        const currQty=inCart?.qty||"";
+
+        card.innerHTML=`
+          <div class="row1">
+            <div class="sku">Артикул: ${o.sku}</div>
+            <span class="badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div class="model">${o.model}</div>
+          <div class="micro">
+            ${hasDetails ? `
+              <a href="#sku=${encodeURIComponent(o.sku)}">Подробнее</a>
+              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=tech">Тех</a>
+              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=log">Лог</a>
+              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=marketing">Маркетинг</a>
+            ` : `<span class="muted">Нет доп. данных</span>`}
+          </div>
+          <div class="meta">
+            <div class="leftMeta">
+              ${imgUrl && imgsOn ? `<img class="thumb" loading="lazy" src="${imgUrl}" alt="${o.model}">` : ``}
+              <div class="stock">Кол-во: ${o.stock}</div>
+            </div>
+            <div class="price">${fmt(o.price)}</div>
+          </div>
+
+          <div class="cart-ctl">
+            <input type="number" class="qty" min="0" step="1" placeholder="шт." value="${currQty}">
+            <button class="btn" data-add="1">Добавить</button>
+            <button class="btn" data-remove="1">Убрать</button>
+            <button class="btn" data-clear="1">Очистить</button>
+            <span class="sum" ${inCart&&inCart.qty>0?"":"hidden"}>${inCart?("Сумма: "+fmt(inCart.qty*o.price)):""}</span>
+            <span class="warn" ${inCart&&inCart.qty>o.stock?"":"hidden"}>⚠ Перебронировано (склад: ${o.stock})</span>
+          </div>
+        `;
+        if (imgUrl && imgsOn){
+          const img=$(".thumb",card);
+          img?.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
+        }
+
+        // Event delegation per card
+        const qtyInput=$(".qty",card);
+        $(".btn[data-add]",card).addEventListener("click", ()=>{
+          const qty=+qtyInput.value||0;
+          if(qty<=0) return;
+          cartAdd(o.sku, qty, o.price, o.model);
+        });
+        $(".btn[data-remove]",card).addEventListener("click", ()=>{
+          const qty=+qtyInput.value||0;
+          if(qty<=0) return;
+          cartAdd(o.sku, -qty, o.price, o.model);
+        });
+        $(".btn[data-clear]",card).addEventListener("click", ()=>{
+          cartSet(o.sku, 0, o.price, o.model);
+        });
+
+        frag.appendChild(card);
+      }
+      list.appendChild(frag);
       stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}${showImages.checked?"":" • изображения скрыты"}`;
     }
 
@@ -308,161 +459,114 @@
         .filter(Boolean);
     }
 
+    // DETAIL (unchanged logic)
     function renderDetail(sku, tab="details"){
       viewList.hidden=true; viewDetail.hidden=false;
+      const o=OFFERS.find(x=>x.sku===sku);
+      const d=DETAIL_MAP.get(sku)||{tech:"",log:"",marketing:"",add:""};
+      const imgUrl=IMG_MAP.get(sku)||"";
+      detailHead.className="head"+((o&&o.stock===0)?" oos":"");
+      const badge=o?(o.stock>0?`<span class="badge ok">В наличии</span>`:`<span class="badge no">Нет в наличии</span>`):"";
+      detailHead.innerHTML=`
+        <div class="hrow"><div class="title1">${o?`Артикул: ${o.sku}`:sku}</div>${badge}</div>
+        <div class="hrow"><div>${o?o.model:""}</div><div class="price">${o?fmt(o.price):""}</div></div>
+        <div class="hero">${imgUrl?`<img id="heroImg" loading="lazy" src="${imgUrl}" alt="${o?o.model:""}">`:""}${o?`<div class="muted">Остаток: ${o.stock}</div>`:""}</div>`;
+      const heroImg=$("#heroImg"); if(heroImg) heroImg.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
 
-      const o = OFFERS.find(x=>x.sku===sku);
-      const d = DETAIL_MAP.get(sku) || {tech:"",log:"",marketing:"",add:""};
-      const imgUrl = IMG_MAP.get(sku) || "";
+      const tabs=[{id:"details",label:"Подробнее"},{id:"tech",label:"Тех"},{id:"log",label:"Лог"},{id:"marketing",label:"Маркетинг"}];
+      tabsEl.innerHTML=""; tabs.forEach(t=>{ const b=document.createElement("button"); b.className="tabbtn"+(t.id===tab?" active":""); b.textContent=t.label;
+        b.addEventListener("click", ()=>{ const base=`#sku=${encodeURIComponent(sku)}`; location.replace(t.id==="details"?base:`${base}&tab=${t.id}`); }); tabsEl.appendChild(b); });
 
-      detailHead.className = "head" + ((o && o.stock===0) ? " oos" : "");
-      const badge = o ? (o.stock>0 ? `<span class="badge ok">В наличии</span>` : `<span class="badge no">Нет в наличии</span>`) : "";
-      detailHead.innerHTML = `
-        <div class="hrow">
-          <div class="title1">${o ? `Артикул: ${o.sku}` : sku}</div>
-          ${badge}
-        </div>
-        <div class="hrow">
-          <div>${o ? o.model : ""}</div>
-          <div class="price">${o ? formatTenge(o.price) : ""}</div>
-        </div>
-        <div class="hero">
-          ${imgUrl ? `<img id="heroImg" loading="lazy" src="${imgUrl}" alt="${o?o.model:""}">` : ""}
-          ${o ? `<div class="muted">Остаток: ${o.stock}</div>` : ""}
-        </div>
-      `;
-      const heroImg = document.getElementById("heroImg");
-      if (heroImg) heroImg.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
-
-      const tabs = [
-        {id:"details", label:"Подробнее"},
-        {id:"tech", label:"Тех"},
-        {id:"log", label:"Лог"},
-        {id:"marketing", label:"Маркетинг"}
-      ];
-      tabsEl.innerHTML = "";
-      tabs.forEach(t=>{
-        const b=document.createElement("button");
-        b.className="tabbtn" + (t.id===tab?" active":"");
-        b.textContent=t.label;
-        b.addEventListener("click", ()=>{
-          const base = `#sku=${encodeURIComponent(sku)}`;
-          location.replace(t.id==="details" ? base : `${base}&tab=${t.id}`);
-        });
-        tabsEl.appendChild(b);
-      });
-
-      // Tab content (blocks look the same across tabs)
-      let html = "";
-      if (tab==="details"){
-        const bullets = sanitizeBullets(d.add);
-        html += bullets.length
-          ? `<div class="block"><ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul></div>`
-          : `<div class="muted" style="color:#6b7280">Нет кратких пунктов</div>`;
-      }
-      if (tab==="tech"){
-        html += d.tech ? `<div class="block"><pre>${d.tech}</pre></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
-      }
-      if (tab==="log"){
-        html += d.log ? `<div class="block"><pre>${d.log}</pre></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
-      }
-      if (tab==="marketing"){
-        html += d.marketing ? `<div class="block" style="background:#fff;border-color:#e5e7eb"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
-      }
-      tabpanel.innerHTML = html;
+      let html="";
+      if(tab==="details"){ const bullets=sanitizeBullets(d.add); html+= bullets.length?`<div class="block"><ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:`<div class="muted">Нет кратких пунктов</div>`; }
+      if(tab==="tech"){ html+= d.tech?`<div class="block"><pre>${d.tech}</pre></div>`:`<div class="muted">Нет данных</div>`; }
+      if(tab==="log"){ html+= d.log?`<div class="block"><pre>${d.log}</pre></div>`:`<div class="muted">Нет данных</div>`; }
+      if(tab==="marketing"){ html+= d.marketing?`<div class="block" style="background:var(--input);border-color:var(--border)"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>`:`<div class="muted">Нет данных</div>`; }
+      tabpanel.innerHTML=html;
     }
 
-    // ---- Exports now include details ----
+    // --------- EXPORTS (main list) ----------
     function exportExcel(rows){
       const out = rows.map(o=>{
         const d = DETAIL_MAP.get(o.sku) || {};
-        return {
-          Артикул:o.sku, Модель:o.model, Остаток:o.stock, Цена:o.price,
-          Изображение: IMG_MAP.get(o.sku)||"",
-          Тех: d.tech || "", Лог: d.log || "", Маркетинг: d.marketing || "", Подробнее: d.add || ""
-        };
+        return { Артикул:o.sku, Модель:o.model, Остаток:o.stock, Цена:o.price,
+          Изображение: IMG_MAP.get(o.sku)||"", Тех:d.tech||"", Лог:d.log||"", Маркетинг:d.marketing||"", Подробнее:d.add||"" };
       });
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(out);
-      ws["!cols"] = [{wch:12},{wch:50},{wch:10},{wch:12},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40}];
-      XLSX.utils.book_append_sheet(wb, ws, "Прайс");
-      XLSX.writeFile(wb, "einhell_price.xlsx");
+      const wb=XLSX.utils.book_new(); const ws=XLSX.utils.json_to_sheet(out);
+      ws["!cols"]=[{wch:12},{wch:50},{wch:10},{wch:12},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40}];
+      XLSX.utils.book_append_sheet(wb, ws, "Прайс"); XLSX.writeFile(wb, "einhell_price.xlsx");
     }
     function exportCSV(rows){
-      const header = ["Артикул","Модель","Остаток","Цена","Изображение","Тех","Лог","Маркетинг","Подробнее"];
-      const lines = [header.map(escCSV).join(",")];
+      const header=["Артикул","Модель","Остаток","Цена","Изображение","Тех","Лог","Маркетинг","Подробнее"];
+      const lines=[header.map(escCSV).join(",")];
       for(const o of rows){
-        const d = DETAIL_MAP.get(o.sku) || {};
-        lines.push([
-          o.sku,o.model,o.stock,o.price,IMG_MAP.get(o.sku)||"", d.tech||"", d.log||"", d.marketing||"", d.add||""
-        ].map(escCSV).join(","));
+        const d=DETAIL_MAP.get(o.sku)||{};
+        lines.push([o.sku,o.model,o.stock,o.price,IMG_MAP.get(o.sku)||"",d.tech||"",d.log||"",d.marketing||"",d.add||""].map(escCSV).join(","));
       }
-      downloadBlob("einhell_price.csv", "text/csv;charset=utf-8", lines.join("\n"));
+      downloadBlob("einhell_price.csv","text/csv;charset=utf-8",lines.join("\n"));
     }
     function exportJSON(rows){
-      const arr = rows.map(o=>{
-        const d = DETAIL_MAP.get(o.sku) || {};
-        return {sku:o.sku, model:o.model, stock:o.stock, price:o.price, image: IMG_MAP.get(o.sku)||null,
-                tech:d.tech||"", log:d.log||"", marketing:d.marketing||"", details:d.add||""};
-      });
-      downloadBlob("einhell_price.json", "application/json;charset=utf-8", JSON.stringify(arr, null, 2));
+      const arr=rows.map(o=>{ const d=DETAIL_MAP.get(o.sku)||{}; return {sku:o.sku,model:o.model,stock:o.stock,price:o.price,image:IMG_MAP.get(o.sku)||null,tech:d.tech||"",log:d.log||"",marketing:d.marketing||"",details:d.add||""};});
+      downloadBlob("einhell_price.json","application/json;charset=utf-8",JSON.stringify(arr,null,2));
     }
     function exportXML(rows){
-      const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-      let xml = `<?xml version="1.0" encoding="UTF-8"?><items>`;
+      const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      let xml=`<?xml version="1.0" encoding="UTF-8"?><items>`;
       for(const o of rows){
-        const d = DETAIL_MAP.get(o.sku) || {};
-        const img = IMG_MAP.get(o.sku)||"";
-        xml += `<item sku="${esc(o.sku)}"><model>${esc(o.model)}</model><stock>${o.stock}</stock><price>${o.price}</price>${img?`<image>${esc(img)}</image>`:""}<tech>${esc(d.tech||"")}</tech><log>${esc(d.log||"")}</log><marketing>${esc(d.marketing||"")}</marketing><details>${esc(d.add||"")}</details></item>`;
+        const d=DETAIL_MAP.get(o.sku)||{}, img=IMG_MAP.get(o.sku)||"";
+        xml+=`<item sku="${esc(o.sku)}"><model>${esc(o.model)}</model><stock>${o.stock}</stock><price>${o.price}</price>${img?`<image>${esc(img)}</image>`:""}<tech>${esc(d.tech||"")}</tech><log>${esc(d.log||"")}</log><marketing>${esc(d.marketing||"")}</marketing><details>${esc(d.add||"")}</details></item>`;
       }
-      xml += `</items>`;
-      downloadBlob("einhell_price.xml", "application/xml;charset=utf-8", xml);
+      xml+=`</items>`; downloadBlob("einhell_price.xml","application/xml;charset=utf-8",xml);
     }
 
-    function parseHash(){
-      const h = location.hash.replace(/^#/,"");
-      if (h.includes("sku=")){
-        const sp = new URLSearchParams(h);
-        return { sku: sp.get("sku"), tab: (sp.get("tab")||"details") };
-      }
-      return { sku:null, tab:null };
+    // --------- CART EXPORT ----------
+    function exportCartExcel(){
+      if(CART.size===0) return;
+      const rows=[];
+      CART.forEach((v,sku)=>{
+        const o=OFFERS.find(x=>x.sku===sku);
+        rows.push({ SKU:sku, Model:o?o.model:v.model, Price:v.price, Qty:v.qty, Sum:v.qty*v.price });
+      });
+      const wb=XLSX.utils.book_new(); const ws=XLSX.utils.json_to_sheet(rows);
+      ws["!cols"]=[{wch:12},{wch:50},{wch:12},{wch:8},{wch:14}];
+      XLSX.utils.book_append_sheet(wb, ws, "Cart");
+      const def=`order_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`;
+      const name=prompt("Имя файла:", def) || def;
+      XLSX.writeFile(wb, name);
     }
-    function renderRoute(){
-      const {sku, tab} = parseHash();
-      if (sku){
-        renderDetail(sku, tab||"details");
-      }else{
-        renderList();
-      }
-    }
+
+    // Router
+    function parseHash(){ const h=location.hash.replace(/^#/,""); if(h.includes("sku=")){ const sp=new URLSearchParams(h); return {sku:sp.get("sku"), tab:(sp.get("tab")||"details")}; } return {sku:null,tab:null};}
+    function renderRoute(){ const {sku,tab}=parseHash(); if(sku){ renderDetail(sku,tab||"details"); } else { renderList(); } }
 
     async function init(){
       try{
         stats.textContent="Загрузка…";
-        await Promise.all([fetchImagesMap(), fetchDetailsMap()]);
-        const xml = await fetchXML();
-        OFFERS = parseOffers(xml);
-        if (OFFERS.length === 0) throw new Error("Parsed 0 offers (namespace?)");
-        footer.textContent = "Обновлено: " + new Date().toLocaleString();
-        errorBox.hidden = true;
+        await Promise.all([fetchImages(), fetchDetails()]);
+        const xml=await fetchXML(); OFFERS=parseOffers(xml);
+        if(OFFERS.length===0) throw new Error("Parsed 0 offers (namespace?)");
+        const now=new Date().toLocaleString();
+        footer.textContent = "Обновлено: " + now;
+        updatedTop.textContent = "Обновлено: " + now;
+        errorBox.hidden=true;
         renderRoute();
       }catch(err){
         console.error(err);
-        errorBox.hidden = false;
-        errorBox.textContent = "Не удалось загрузить: " + err.message;
-        stats.textContent = "—";
+        errorBox.hidden=false;
+        errorBox.textContent="Не удалось загрузить: "+err.message;
+        stats.textContent="—";
       }
     }
 
-    // List events
+    // Events: list
     q.addEventListener("input",debounce(()=>{ if(!location.hash) renderList(); },220));
     onlyInStock.addEventListener("change",()=>{ if(!location.hash) renderList(); });
     showImages.addEventListener("change",()=>{ if(!location.hash) renderList(); });
     sortKey.addEventListener("change",()=>{ if(!location.hash) renderList(); });
-    clearBtn.addEventListener("click",()=>{ q.value=""; if(!location.hash) { renderList(); q.focus(); } });
+    clearBtn.addEventListener("click",()=>{ q.value=""; if(!location.hash){ renderList(); q.focus(); } });
 
     btnDownload.addEventListener("click", ()=>{
-      const rows = sortOffers(currentFiltered());
+      const rows=sortOffers(currentFiltered());
       switch(downloadFmt.value){
         case "xlsx": return exportExcel(rows);
         case "csv":  return exportCSV(rows);
@@ -471,10 +575,26 @@
       }
     });
 
-    // Detail events
-    document.getElementById("btnBack").addEventListener("click", ()=>{
-      location.replace("#"); // jump to list immediately
-      renderList();
+    // Detail
+    btnBack.addEventListener("click", ()=>{ location.replace("#"); renderList(); });
+
+    // Cart drawer
+    openCart.addEventListener("click", ()=> drawer.classList.add("open"));
+    closeCart.addEventListener("click", ()=> drawer.classList.remove("open"));
+    drawerClear.addEventListener("click", ()=> cartClear());
+    clearCart.addEventListener("click", ()=> cartClear());
+    exportCart.addEventListener("click", ()=> exportCartExcel());
+    drawerBody.addEventListener("input", (e)=>{
+      if(e.target.classList.contains("qty")){
+        const sku=e.target.getAttribute("data-sku");
+        const v=CART.get(sku); if(!v) return;
+        const q=+e.target.value||0;
+        cartSet(sku, q, v.price, v.model);
+      }
+    });
+    drawerBody.addEventListener("click", (e)=>{
+      const del=e.target.getAttribute("data-del");
+      if(del){ CART.delete(del); updateCartUI(); }
     });
 
     window.addEventListener("hashchange", renderRoute);
