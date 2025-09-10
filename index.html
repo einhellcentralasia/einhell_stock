@@ -687,7 +687,7 @@
       await Promise.all([fetchImages(), fetchDetails()]);
       const xml=await fetchXML(); OFFERS=parseOffers(xml);
       if(OFFERS.length===0) throw new Error("Parsed 0 offers");
-      $("#footer").textContent="Обновлено: " + new Date().toLocaleString();
+      //$("#footer").textContent="Обновлено: " + new Date().toLocaleString();
       errorBox.hidden=true;
       renderRoute();
     }catch(err){
