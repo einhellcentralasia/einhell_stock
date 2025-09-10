@@ -18,7 +18,6 @@
     --accent:#111111; --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.08);
     --input:#fff; --inputText:#111;
     --ok:#2e7d32; --warn:#b91c1c; --over:#ef4444;
-
     --chip-bg:#e9ecef; --chip-ink:#111;
 
     --qty-bg:#111; --qty-ink:#fff;
@@ -26,7 +25,15 @@
     /* runtime offsets */
     --hdr-h:56px;
     --controls-top:56px;
-    --drawer-head:48px;
+    --drawer-head:52px;
+
+    /* Icon theme colors */
+    --icon-header-light:#111;
+    --icon-header-dark:#f2f2f7;
+
+    /* bulb tint helpers (used with filters on img) */
+    --bulb-warm-filter: invert(86%) sepia(52%) saturate(1247%) hue-rotate(355deg) brightness(103%) contrast(100%);
+    --bulb-cool-filter: invert(71%) sepia(13%) saturate(2213%) hue-rotate(208deg) brightness(101%) contrast(102%);
   }
   html[data-theme="dark"]{
     /* Dark (Apple graphite) */
@@ -38,8 +45,10 @@
   }
   *{box-sizing:border-box}
   html,body{max-width:100%;overflow-x:hidden}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);padding-top:var(--hdr-h)}
-  img{max-width:100%}
+  body{
+    margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);padding-top:var(--hdr-h)
+  }
   .hidden{display:none!important}
   .muted{color:var(--muted)}
   .no-scroll{overflow:hidden}
@@ -56,24 +65,23 @@
   .hdr-spacer{flex:1}
   .chip{
     display:inline-flex; align-items:center; gap:8px;
-    background:var(--chip-bg); color:#111; /* light mode visibility */
+    background:var(--chip-bg); color:var(--chip-ink);
     padding:8px 14px; border-radius:14px; font-weight:800;
     box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);
   }
-  html[data-theme="dark"] .chip{ color:var(--chip-ink); }
   .hdr-btn{
     display:inline-flex; align-items:center; justify-content:center;
-    width:44px; height:44px; border-radius:14px; border:0; cursor:pointer;
-    background:var(--chip-bg); color:var(--chip-ink); font-size:0;
+    width:48px; height:44px; border-radius:14px; border:0; cursor:pointer;
+    background:var(--chip-bg); color:var(--icon-header-light); font-size:0;
   }
-  /* more room for the cart button */
-  #openCart.hdr-btn{ width:56px; }
+  html[data-theme="dark"] .hdr-btn{ color:var(--icon-header-dark); }
+  #openCart.hdr-btn{ width:64px; }  /* a bit wider for the cart */
 
   /* Controls (sticky under header) */
   .controls{
     position:sticky; top:var(--controls-top); z-index:900;
     background:var(--bg); border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 10px
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 10px
   }
   .search{flex:1 1 200px; max-width:420px; position:relative}
   .search input{
@@ -81,12 +89,14 @@
     border-radius:10px; background:var(--input); color:var(--inputText)
   }
   .clear-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;padding:6px;color:#9ca3af}
-  .clear-btn .icon{width:20px;height:20px}
   .group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .spacer{flex:1}
   select{padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText)}
   .btn{padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--inputText);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
   .btn:active{transform:scale(.99)}
+
+  /* Spacing under filters so the first cards are never hidden */
+  #view-list{ margin-top:16px; }
 
   /* Stats & list */
   .stats{padding:6px 12px;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -119,15 +129,13 @@
     padding:8px 12px; background:var(--qty-bg); color:var(--qty-ink);
     border-radius:12px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
   }
-  /* Light mode: lighter qty pill */
   html[data-theme="light"] .qtywrap{ background:#f3f4f6; color:#111; }
-
   .icon-btn{
     width:24px; height:24px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center;
-    font-weight:800; cursor:pointer; user-select:none; background:transparent; border:none; color:#fff;
+    font-weight:800; cursor:pointer; user-select:none; background:transparent; border:none;
   }
-  .icon-btn.red{background:#ef4444}
-  .icon-btn.green{background:#22c55e}
+  .icon-btn.red{background:#ef4444; color:#fff}
+  .icon-btn.green{background:#22c55e; color:#fff}
   html[data-theme="light"] .icon-btn{ color:#111; }
 
   .qty{
@@ -142,8 +150,10 @@
   .overdot{width:10px;height:10px;border-radius:50%;background:var(--over);display:inline-block}
   .overwrap{display:flex;align-items:center;gap:6px}
 
-  .more a{display:inline-block; padding:8px 14px; border-radius:12px; text-decoration:none;
-    background:var(--chip-bg); color:#111; font-weight:600}
+  .more a{
+    display:inline-block; padding:8px 14px; border-radius:12px; text-decoration:none;
+    background:var(--chip-bg); color:var(--chip-ink); font-weight:600
+  }
 
   @media(min-width:760px){.list{grid-template-columns:repeat(2,1fr)} .card{padding:14px}}
   @media(min-width:1100px){.list{grid-template-columns:repeat(3,1fr)}}
@@ -176,7 +186,7 @@
 
   /* Drawer (cart) */
   .drawer{
-    position:fixed; top:0; right:0; width:440px; max-width:94vw; height:100vh; background:var(--bg);
+    position:fixed; top:0; right:0; width:460px; max-width:94vw; height:100vh; background:var(--bg);
     border-left:1px solid var(--border); box-shadow:-4px 0 16px rgba(0,0,0,.25);
     transform:translateX(100%); transition:.25s; z-index:1100; display:flex; flex-direction:column
   }
@@ -186,36 +196,25 @@
     display:flex; align-items:center; justify-content:space-between; gap:8px;
     padding:10px; border-bottom:1px solid var(--border); background:var(--bg);
     min-height:var(--drawer-head);
+    color:var(--ink);
   }
-  .drawer .meta-top{font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px}
-  .drawer .body{padding:10px; padding-top:calc(var(--drawer-head) + 4px); overflow:auto; display:flex; flex-direction:column; gap:8px; -webkit-overflow-scrolling:touch}
+  .drawer .meta-top{font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; color:var(--ink);}
+  #drawerTotal{ color:var(--ink) !important; }
+  .drawer .body{padding:10px; padding-top:6px; overflow:auto; display:flex; flex-direction:column; gap:8px; -webkit-overflow-scrolling:touch}
   .line{border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--card)}
   .line-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
   .line-qty{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
-  /* THEME-SPECIFIC ICON COLORS (img-based) */
-  /* Cart icon visibility */
-  html[data-theme="light"] #cartIcon{ filter:none; }       /* black on light */
-  html[data-theme="dark"]  #cartIcon{ filter:invert(1); }  /* white on dark */
-
-  /* Drawer action icons → white in dark mode */
-  html[data-theme="dark"] .drawer .btn img{ filter: invert(1) brightness(1.1) contrast(1.05); }
-
-  /* Trash icon = red (override both themes, including the dark-mode white rule) */
-  #trashIcon{
-    filter: invert(19%) sepia(96%) saturate(6400%) hue-rotate(352deg) brightness(96%) contrast(108%);
-  }
-  html[data-theme="dark"] #trashIcon{
-    filter: invert(34%) sepia(89%) saturate(4100%) hue-rotate(356deg) brightness(100%) contrast(105%);
+  /* Header icon colors (inline SVGs use currentColor automatically) */
+  /* Download button contrast (dark) */
+  html[data-theme="dark"] #btnDownload{
+    background:#3a3a3c; border-color:#3a3a3c; color:#f2f2f7;
   }
 
-  /* Lightbulb tint: warm in light, cool in dark */
-  html[data-theme="light"] #themeIcon{
-    filter: invert(77%) sepia(81%) saturate(600%) hue-rotate(1deg) brightness(106%) contrast(96%);
-  }
-  html[data-theme="dark"] #themeIcon{
-    filter: invert(62%) sepia(37%) saturate(860%) hue-rotate(212deg) brightness(104%) contrast(95%);
-  }
+  /* Lightbulb image tint */
+  #themeIcon { width:22px;height:22px; }
+  html[data-theme="light"] #themeIcon{ filter:var(--bulb-warm-filter); }
+  html[data-theme="dark"]  #themeIcon{ filter:var(--bulb-cool-filter); }
 </style>
 </head>
 <body>
@@ -223,12 +222,22 @@
   <header id="hdr">
     <img class="logo" src="logo.png" alt="E" onerror="this.style.display='none'">
     <div class="hdr-spacer"></div>
+
     <div class="chip" id="grandTotal">0 ₸</div>
-    <button id="themeToggle" class="hdr-btn" title="Тема">
-      <img id="themeIcon" class="icon" alt="theme">
+
+    <button id="themeToggle" class="hdr-btn" title="Тема" aria-label="Переключить тему">
+      <!-- we swap the src between bulb-on and crossed-bulb-off -->
+      <img id="themeIcon" alt="theme">
     </button>
-    <button id="openCart" class="hdr-btn" title="Корзина">
-      <img class="icon" id="cartIcon" alt="cart">
+
+    <button id="openCart" class="hdr-btn" title="Корзина" aria-label="Открыть корзину">
+      <!-- Cart (inline SVG, currentColor, clean lines) -->
+      <svg id="cartIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="8" cy="21" r="1"></circle>
+        <circle cx="19" cy="21" r="1"></circle>
+        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+      </svg>
       <span id="cartBadge" style="margin-left:6px;font-weight:800;color:inherit;font-size:14px">0</span>
     </button>
   </header>
@@ -238,8 +247,11 @@
     <div class="group">
       <div class="search">
         <input id="q" type="text" placeholder="Артикул или модель…" autocomplete="off" />
-        <button class="clear-btn" id="clear" title="Очистить">
-          <img class="icon" id="iconCloseSearch" alt="clear">
+        <button class="clear-btn" id="clear" title="Очистить" aria-label="Очистить">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18"></path><path d="M6 6l12 12"></path>
+          </svg>
         </button>
       </div>
 
@@ -271,7 +283,11 @@
           <option value="xml">XML</option>
         </select>
         <button class="btn" id="btnDownload" title="Скачать">
-          <img class="icon" id="downloadIcon" alt="download">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 8v8"></path><path d="m8 12 4 4 4-4"></path>
+          </svg>
           <span>Скачать</span>
         </button>
       </div>
@@ -289,7 +305,11 @@
   <div id="view-detail" class="detail hidden">
     <div class="topbar">
       <button class="back" id="btnBack" title="Назад">
-        <img class="icon" id="backIcon" alt="back" style="width:18px;height:18px"> <span>Назад</span>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18"></path><path d="M6 6l12 12"></path>
+        </svg>
+        <span>Назад</span>
       </button>
     </div>
     <div id="detail-head" class="head"></div>
@@ -310,13 +330,26 @@
       <div class="meta-top">Итого: <span id="drawerTotal">0 ₸</span></div>
       <div class="meta-top" style="gap:6px;font-weight:600">
         <button class="btn" id="drawerClear" title="Очистить">
-          <img class="icon" id="trashIcon" alt="trash">
+          <!-- Trash (always red) -->
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+            <path d="M3 6h18"></path>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
         </button>
         <button class="btn" id="exportCart" title="Excel">
-          <img class="icon" id="downloadIcon2" alt="download">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 8v8"></path><path d="m8 12 4 4 4-4"></path>
+          </svg>
         </button>
         <button class="btn" id="closeCart" title="Закрыть">
-          <img class="icon" id="closeCartIcon" alt="close">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18"></path><path d="M6 6l12 12"></path>
+          </svg>
         </button>
       </div>
     </header>
@@ -324,13 +357,14 @@
   </aside>
 
 <script>
-  /* ---- Icons (data URIs) ---- */
-  const ICONS = {
-    tick: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNpcmNsZS1jaGVjay1pY29uIGx1Y2lkZS1jaXJjbGUtY2hlY2siPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PHBhdGggZD0ibTkgMTIgMiAyIDQtNCIvPjwvc3ZnPg==",
-    cancel: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNpcmNsZS14LWljb24gbHVjaWRlLWNpcmNsZS14Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Im0xNSA5LTYgNiIvPjxwYXRoIGQ9Im05IDkgNiA2Ii8+PC9zdmc+",
-    cart: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNob3BwaW5nLWNhcnQtaWNvbiBsdWNpZGUtc2hvcHBpbmctY2FydCI+PGNpcmNsZSBjeD0iOCIgY3k9IjIxIiByPSIxIi8+PGNpcmNsZSBjeD0iMTkiIGN5PSIyMSIgcj0iMSIvPjxwYXRoIGQ9Ik0yLjA1IDIuMDVoMmwyLjY2IDEyLjQyYTIgMiAwIDAgMCAyIDEuNThaOS43OGEyIDIgMCAwIDAgMS45NS0xLjU3bDEuNjUtNy40M0g1LjEyIi8+PC9zdmc+",
-    download: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNpcmNsZS1hcnJvdy1kb3duLWljb24gbHVjaWRlLWNpcmNsZS1hcnJvdy1kb3duIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Ik0xMiA4djgiLz48cGF0aCBkPSJtOCAxMiA0IDQgNC00Ii8+PC9zdmc+",
-    close: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXgtaWNvbiBsdWNpZGUteCI+PHBhdGggZD0iTTE4IDYgNiAxOCIvPjxwYXRoIGQ9Im02IDYgMTIgMTIiLz48L3N2Zz4="
+  /* ---- Bulb icons (your data URIs) ---- */
+  const BULB_ON = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxpZ2h0YnVsYi1pY29uIGx1Y2lkZS1saWdodGJ1bGIiPjxwYXRoIGQ9Ik0xNSAxNGMuMi0xIC43LTEuNyAxLjUtMi41IDEtLjkgMS41LTIuMiAxLjUtMy41QTYgNiAwIDAgMCA2IDhjMCAxIC4yIDIuMiAxLjUgMy41LjcuNyAxLjMgMS41IDEuNSAyLjUiLz48cGF0aCBkPSJNOSAxOGg2Ii8+PHBhdGggZD0iTTEwIDIyaDQiLz48L3N2Zz4=";
+  const BULB_OFF_X = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxpZ2h0YnVsYi1vZmYtaWNvbiBsdWNpZGUtbGlnaHRidWxiLW9mZiI+PHBhdGggZD0iTTE2LjggMTEuMmMuOC0uOSAxLjItMiAxLjItMy4yYTYgNiAwIDAgMC05LjMtNSIvPjxwYXRoIGQ9Im0yIDIgMjAgMjAiLz48cGF0aCBkPSJNNi4zIDYuM2E0LjY3IDQuNjcgMCAwIDAgMS4yIDUuMmMuNy43IDEuMyAxLjUgMS41IDIuNSIvPjxwYXRoIGQ9Ik05IDE4aDYiLz48cGF0aCBkPSJNMTAgMjJoNCIvPjwvc3ZnPg==";
+
+  /* ---- Small inline-SVG helpers for dynamic rows ---- */
+  const SVGs = {
+    tick: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>`,
+    cancel: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M15 9 9 15"></path><path d="M9 9l6 6"></path></svg>`
   };
 
   /* ---- Config ---- */
@@ -357,7 +391,7 @@
   const lightbox=$("#lightbox"), lightboxImg=$("#lightboxImg");
   const btnBack=$("#btnBack"), detailHead=$("#detail-head"), tabsEl=$("#tabs"), tabpanel=$("#tabpanel");
   const openCart=$("#openCart"), closeCart=$("#closeCart"), drawer=$("#drawer"), drawerBody=$("#drawerBody"), drawerHeader=$("#drawerHeader");
-  const drawerTotal=$("#drawerTotal"), drawerClear=$("#drawerClear"), exportCart=$("#exportCart");
+  const drawerTotal=$("#drawerTotal");
   const cartBadge=$("#cartBadge"), grandTotal=$("#grandTotal");
   const themeToggle=$("#themeToggle"), themeIcon=$("#themeIcon");
 
@@ -365,21 +399,15 @@
   let OFFERS=[], IMG_MAP=new Map(), DETAIL_MAP=new Map();
   const CART=new Map(); const CART_KEY="einhell_cart_v1";
 
-  /* ---- Icon injection ---- */
-  function setSrc(el, uri){ if(el) el.src = uri; }
-  function injectStaticIcons(){
-    setSrc($("#cartIcon"), ICONS.cart);
-    setSrc($("#iconCloseSearch"), ICONS.close);
-    setSrc($("#downloadIcon"), ICONS.download);
-    setSrc($("#downloadIcon2"), ICONS.download);
-    setSrc($("#trashIcon"), ICONS.cart);   /* placeholder, colored red via CSS; use your trash data-URI if desired */
-    setSrc($("#closeCartIcon"), ICONS.close);
-    setSrc($("#backIcon"), ICONS.close);
-  }
-
   /* ---- Theme ---- */
+  function setBulbForTheme(){
+    const cur=document.documentElement.getAttribute('data-theme')||'light';
+    if(cur==='light'){ themeIcon.src=BULB_ON;  }
+    else { themeIcon.src=BULB_OFF_X; }
+  }
   const applyTheme=t=>{
     document.documentElement.setAttribute('data-theme',t);
+    setBulbForTheme();
   };
   themeToggle.addEventListener('click', ()=>{
     const cur=document.documentElement.getAttribute('data-theme')||'light';
@@ -394,7 +422,7 @@
     const h = hdr.offsetHeight || 56;
     document.documentElement.style.setProperty('--hdr-h', h + "px");
     document.documentElement.style.setProperty('--controls-top', h + "px");
-    const dh = drawerHeader?.offsetHeight || 48;
+    const dh = drawerHeader?.offsetHeight || 52;
     document.documentElement.style.setProperty('--drawer-head', dh + "px");
   }
   window.addEventListener('resize', updateOffsets);
@@ -449,6 +477,7 @@
     drawerTotal.textContent=fmt(total);
     renderDrawer();
 
+    // refresh per-card UI
     $$(".card").forEach(card=>{
       const sku=card.getAttribute("data-sku"); const v=CART.get(sku);
       const sumEl=$(".sum",card); const qtyIn=$(".qty",card);
@@ -465,8 +494,8 @@
     });
   }
   function renderDrawer(){
-    drawerBody.innerHTML="";
-    if(CART.size===0){ drawerBody.innerHTML=`<div class="muted">Корзина пуста</div>`; return; }
+    const body=drawerBody; body.innerHTML="";
+    if(CART.size===0){ body.innerHTML=`<div class="muted">Корзина пуста</div>`; return; }
     CART.forEach((v,sku)=>{
       const o=OFFERS.find(x=>x.sku===sku); const stock=o?o.stock:0, img=IMG_MAP.get(sku)||"";
       const line=document.createElement("div"); line.className="line";
@@ -478,18 +507,18 @@
         <div class="line-qty">
           ${img?`<img src="${img}" style="width:40px;height:40px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff">`:``}
           <div class="qtywrap">
-            <button class="icon-btn red" data-clear="${sku}" title="Удалить">
-              <img class="icon" src="${ICONS.cancel}" alt="cancel" style="width:18px;height:18px">
+            <button class="icon-btn red" data-clear="${sku}" title="Удалить" aria-label="Удалить">
+              ${SVGs.cancel}
             </button>
             <input type="text" inputmode="numeric" pattern="[0-9]*" class="qty" value="${v.qty}" data-sku="${sku}">
-            <button class="icon-btn green" data-apply="${sku}" title="Применить">
-              <img class="icon" src="${ICONS.tick}" alt="apply" style="width:18px;height:18px">
+            <button class="icon-btn green" data-apply="${sku}" title="Применить" aria-label="Применить">
+              ${SVGs.tick}
             </button>
           </div>
           <span class="sum">${fmt(v.qty*v.price)}</span>
           <span class="overwrap ${v.qty>stock?"":"hidden"}" title="Склад: ${stock}"><span class="overdot"></span></span>
         </div>`;
-      drawerBody.appendChild(line);
+      body.appendChild(line);
     });
   }
 
@@ -498,7 +527,11 @@
     viewList.classList.remove("hidden"); viewDetail.classList.add("hidden");
     const data=sortOffers(currentFiltered());
     list.innerHTML="";
-    if(!data.length){ list.innerHTML=`<div class="card"><div class="model">Ничего не найдено.</div></div>`; stats.textContent="—"; return; }
+    if(!data.length){
+      list.innerHTML=`<div class="card"><div class="model">Ничего не найдено.</div></div>`;
+      stats.textContent="—";
+      return;
+    }
     const imgsOn=showImages.checked;
     const frag=document.createDocumentFragment();
     for(const o of data){
@@ -534,13 +567,9 @@
         <div class="actions">
           <div class="ctrls">
             <div class="qtywrap">
-              <button class="icon-btn red" title="Очистить">
-                <img class="icon" src="${ICONS.cancel}" alt="cancel" style="width:18px;height:18px">
-              </button>
+              <button class="icon-btn red" title="Очистить" aria-label="Очистить">${SVGs.cancel}</button>
               <input type="text" inputmode="numeric" pattern="[0-9]*" class="qty" placeholder="шт." value="${v?v.qty:""}">
-              <button class="icon-btn green" title="Добавить">
-                <img class="icon" src="${ICONS.tick}" alt="add" style="width:18px;height:18px">
-              </button>
+              <button class="icon-btn green" title="Добавить" aria-label="Добавить">${SVGs.tick}</button>
             </div>
             <span class="overwrap ${v&&v.qty>o.stock?"":"hidden"}" title="Склад: ${o.stock}"><span class="overdot"></span></span>
           </div>
@@ -570,7 +599,9 @@
     }
     list.appendChild(frag);
 
-    stats.textContent = `Показано ${data.length} / ${OFFERS.length}${onlyInStock.checked?" (только в наличии)":""}${showImages.checked?"":" • изображения скрыты"}`;
+    // shown / total / selected
+    const selected = CART.size;
+    stats.textContent = `Показано ${data.length} / ${OFFERS.length}${onlyInStock.checked?" (только в наличии)":""}${showImages.checked?"":" • изображения скрыты"} • выбрано: ${selected}`;
     updateCartUI();
   }
 
@@ -650,7 +681,6 @@
   /* ---- Init & events ---- */
   async function init(){
     try{
-      injectStaticIcons();
       updateOffsets();
       stats.textContent="Загрузка…";
       loadCart();
@@ -695,6 +725,7 @@
     document.body.classList.remove("no-scroll");
   });
 
+  // Drawer interactions
   $("#drawerClear").addEventListener("click", ()=> cartClear());
   $("#exportCart").addEventListener("click", ()=>{
     if(CART.size===0) return;
@@ -711,7 +742,6 @@
     XLSX.writeFile(wb, name);
   });
 
-  // Drawer interactions
   drawerBody.addEventListener("input", (e)=>{
     if(e.target.classList.contains("qty")){
       e.target.value = e.target.value.replace(/\D+/g,"").slice(0,6);
