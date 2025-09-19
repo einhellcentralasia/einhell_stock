@@ -112,8 +112,7 @@
     </div>
     <button id="themeToggle" class="hdr-btn" title="Тема"><img id="themeIcon" alt="theme"></button>
   </header>
-
-  <!-- LIST VIEW -->
+    <!-- LIST VIEW -->
   <div id="view-list">
     <div class="controls">
       <div class="search">
@@ -160,382 +159,381 @@
   <div class="lightbox" id="lightbox" onclick="this.style.display='none'">
     <img id="lightboxImg" alt="preview">
   </div>
-    <script>
-    // ==== THEME TOGGLE ====
-    const BULB_ON="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS41IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xMiAydjIiLz48cGF0aCBkPSJNMTIgMjB2MiIvPjxwYXRoIGQ9Ik00LjIxIDQuMjFsMS40MSAxLjQxIi8+PHBhdGggZD0iTTguMjEgMTUuNzlsLTEuNDEgMS40MSIvPjxwYXRoIGQ9Ik0yIDEyaDIiLz48cGF0aCBkPSJNIDIwIDEyaDIiLz48cGF0aCBkPSJNNS42MyAxOC4zNyAxNC4zNyA1LjYzYTIgMiAwIDAgMC0yLjgzIDIuODN6Ii8+PC9zdmc+";
-    const BULB_OFF="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS41IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiLz48cGF0aCBkPSJNMTIgMnYyIi8+PHBhdGggZD0iTTEyIDIwdjIiLz48cGF0aCBkPSJNNC4yMSA0LjIxbDEuNDEgMS40MSIvPjxwYXRoIGQ9Ik04LjIxIDE1Ljc5bC0xLjQxIDEuNDEiLz48cGF0aCBkPSJNMiAxMmgxIi8+PHBhdGggZD0iTTIxIDEyaDEiLz48cGF0aCBkPSJNNS42MyAxOC4zN0wxOC4zNyA1LjYzIi8+PC9zdmc+";
+  <script>
+  // ==== THEME TOGGLE ====
+  const BULB_ON="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjQzQ4QjA0IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTExLjk5IDJhNyA3IDAgMCAwLTcgNyA3IDcgMCAwIDAgMy40NiA1Ljk3Yy4zMy4yMi41NC41OC41NCAuOTZ2My4wN2MwIC40LjIxLjc3LjU2IDkuNzdzLjg3IDEuMjkuODcgMS4yOWgxLjA1YzAgMS4xLjg5IDIgMiAyaDRjMS4xMSAwIDItLjg5IDItMmguOTVjMCAwIC42Mi0uNDkgLjg3LTEuMjkuMjgtLjg4LjU2LTkuMzc1LjU2LTkuNzd2LTMuMDdjMC0uMzguMi0uNzQuNTMtLjk2QTcgNyAwIDAgMCAxMiAyWiIvPjwvc3ZnPg==";
+  const BULB_OFF="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjNjY1Q0ZGIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDJhNyA3IDAgMCAwLTcgNyA3IDcgMCAwIDAgMy40NiA1Ljk3Yy4zMy4yMi41NC41OC41NCAuOTZ2My4wN2MwIC40LjIxLjc3LjU2IDkuNzdzLjg3IDEuMjkuODcgMS4yOWgxLjA1YzAgMS4xLjg5IDIgMiAyaDRjMS4xMSAwIDItLjg5IDItMmguOTVjMCAwIC42Mi0uNDkgLjg3LTEuMjkuMjgtLjg4LjU2LTkuMzc1LjU2LTkuNzd2LTMuMDdjMC0uMzguMi0uNzQuNTMtLjk2QTcgNyAwIDAgMCAxMiAyWiIvPjwvc3ZnPg==";
 
-    const themeToggle=document.getElementById("themeToggle");
-    const themeIcon=document.getElementById("themeIcon");
-    function setBulb(){
-      const cur=document.documentElement.getAttribute('data-theme')||'light';
-      themeIcon.src=cur==='light'?BULB_ON:BULB_OFF;
-    }
-    function applyTheme(t){
-      document.documentElement.setAttribute('data-theme',t);
-      localStorage.setItem('theme',t);
-      setBulb();
-    }
-    themeToggle.addEventListener("click",()=>{
-      const cur=document.documentElement.getAttribute('data-theme')||'light';
-      applyTheme(cur==='light'?'dark':'light');
-    });
-    applyTheme(localStorage.getItem('theme')||'light');
+  const themeToggle=document.getElementById("themeToggle");
+  const themeIcon=document.getElementById("themeIcon");
 
-    // ==== ORIGINAL PUBLIC JS ====
+  function setBulb(){
+    const cur=document.documentElement.getAttribute('data-theme')||'light';
+    themeIcon.src=cur==='light'?BULB_ON:BULB_OFF;
+  }
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme',t);
+    localStorage.setItem('theme',t);
+    setBulb();
+  }
+  themeToggle.addEventListener("click",()=>{
+    const cur=document.documentElement.getAttribute('data-theme')||'light';
+    applyTheme(cur==='light'?'dark':'light');
+  });
+  applyTheme(localStorage.getItem('theme')||'light');
 
-    // Data sources
-    const XML_URL        = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
-    const IMAGES_CSV_URL = "../images.csv";     // sku,url
-    const DETAILS_CSV_URL= "../add_data.csv";   // sku,tech,log,marketing,add
+  // ==== ORIGINAL PUBLIC JS ====
 
-    // Helpers
-    function formatTenge(n){ if (isNaN(n)) return n; return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸"; }
-    function debounce(fn,ms=220){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
-    function getByLocalName(node, local){ return Array.from(node.getElementsByTagNameNS("*", local)); }
-    function firstByLocalName(node, local){ const a=getByLocalName(node, local); return a.length?a[0]:null; }
-    function escCSV(v){ const s=String(v??""); return /[",;\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
-    function downloadBlob(filename, mime, data){ const blob=new Blob([data],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); }
+  // Data sources
+  const XML_URL        = "https://einhellcentralasia.github.io/kaspi_stock/price.xml";
+  const IMAGES_CSV_URL = "../images.csv";     // sku,url
+  const DETAILS_CSV_URL= "../add_data.csv";   // sku,tech,log,marketing,add
 
-    // DOM
-    const viewList = document.getElementById("view-list");
-    const viewDetail = document.getElementById("view-detail");
-    const q=document.getElementById("q");
-    const clearBtn=document.getElementById("clear");
-    const onlyInStock=document.getElementById("onlyInStock");
-    const showImages=document.getElementById("showImages");
-    const sortKey=document.getElementById("sortKey");
-    const downloadFmt=document.getElementById("downloadFmt");
-    const btnDownload=document.getElementById("btnDownload");
-    const list=document.getElementById("list");
-    const stats=document.getElementById("stats");
-    const errorBox=document.getElementById("error");
-    const footer=document.getElementById("footer");
-    const lightbox=document.getElementById("lightbox");
-    const lightboxImg=document.getElementById("lightboxImg");
-    const btnBack=document.getElementById("btnBack");
-    const detailHead=document.getElementById("detail-head");
-    const tabsEl=document.getElementById("tabs");
-    const tabpanel=document.getElementById("tabpanel");
+  // Helpers
+  function formatTenge(n){ if (isNaN(n)) return n; return new Intl.NumberFormat("ru-KZ",{maximumFractionDigits:0}).format(Number(n)) + " ₸"; }
+  function debounce(fn,ms=220){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+  function getByLocalName(node, local){ return Array.from(node.getElementsByTagNameNS("*", local)); }
+  function firstByLocalName(node, local){ const a=getByLocalName(node, local); return a.length?a[0]:null; }
+  function escCSV(v){ const s=String(v??""); return /[",;\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
+  function downloadBlob(filename, mime, data){ const blob=new Blob([data],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); }
 
-    // Data
-    let OFFERS=[];             // {sku, model, modelLC, stock, price}
-    let IMG_MAP=new Map();     // sku -> url
-    let DETAIL_MAP=new Map();  // sku -> {tech,log,marketing,add}
+  // DOM
+  const viewList = document.getElementById("view-list");
+  const viewDetail = document.getElementById("view-detail");
+  const q=document.getElementById("q");
+  const clearBtn=document.getElementById("clear");
+  const onlyInStock=document.getElementById("onlyInStock");
+  const showImages=document.getElementById("showImages");
+  const sortKey=document.getElementById("sortKey");
+  const downloadFmt=document.getElementById("downloadFmt");
+  const btnDownload=document.getElementById("btnDownload");
+  const list=document.getElementById("list");
+  const stats=document.getElementById("stats");
+  const errorBox=document.getElementById("error");
+  const footer=document.getElementById("footer");
+  const lightbox=document.getElementById("lightbox");
+  const lightboxImg=document.getElementById("lightboxImg");
+  const btnBack=document.getElementById("btnBack");
+  const detailHead=document.getElementById("detail-head");
+  const tabsEl=document.getElementById("tabs");
+  const tabpanel=document.getElementById("tabpanel");
 
-    // Traffic light mapping
-    function stockBucket(stock){
-      if (stock <= 0)  return { label:"Нет в наличии", cls:"b-red" };
-      if (stock < 10)  return { label:"Менее 10", cls:"b-orange" };
-      if (stock < 50)  return { label:"Менее 50", cls:"b-yellow" };
-      return { label:"Более 50", cls:"b-green" };
-    }
+  // Data
+  let OFFERS=[];             // {sku, model, modelLC, stock, price}
+  let IMG_MAP=new Map();     // sku -> url
+  let DETAIL_MAP=new Map();  // sku -> {tech,log,marketing,add}
 
-    // Fetchers
-    async function fetchText(url){
-      const res = await fetch(url + "?t=" + Date.now(), { cache:"no-store" });
-      if(!res.ok) throw new Error("HTTP " + res.status + " for " + url);
-      return res.text();
-    }
-    async function fetchXML(){
-      const txt = await fetchText(XML_URL);
-      const xml = new DOMParser().parseFromString(txt,"application/xml");
-      if (xml.querySelector("parsererror")) throw new Error("XML parse error");
-      return xml;
-    }
-    async function fetchImagesMap(){
-      try{
-        const csvTxt = await fetchText(IMAGES_CSV_URL);
-        const parsed = Papa.parse(csvTxt, { header:true, skipEmptyLines:true });
-        IMG_MAP.clear();
-        (parsed.data||[]).forEach(row=>{
-          const sku=(row.sku||"").trim(); const url=(row.url||"").trim();
-          if(sku && url && url!=="-") IMG_MAP.set(sku, url);
+  // Traffic light mapping
+  function stockBucket(stock){
+    if (stock <= 0)  return { label:"Нет в наличии", cls:"b-red" };
+    if (stock < 10)  return { label:"Менее 10", cls:"b-orange" };
+    if (stock < 50)  return { label:"Менее 50", cls:"b-yellow" };
+    return { label:"Более 50", cls:"b-green" };
+  }
+
+  // Fetchers
+  async function fetchText(url){
+    const res = await fetch(url + "?t=" + Date.now(), { cache:"no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status + " for " + url);
+    return res.text();
+  }
+  async function fetchXML(){
+    const txt = await fetchText(XML_URL);
+    const xml = new DOMParser().parseFromString(txt,"application/xml");
+    if (xml.querySelector("parsererror")) throw new Error("XML parse error");
+    return xml;
+  }
+  async function fetchImagesMap(){
+    try{
+      const csvTxt = await fetchText(IMAGES_CSV_URL);
+      const parsed = Papa.parse(csvTxt, { header:true, skipEmptyLines:true });
+      IMG_MAP.clear();
+      (parsed.data||[]).forEach(row=>{
+        const sku=(row.sku||"").trim(); const url=(row.url||"").trim();
+        if(sku && url && url!=="-") IMG_MAP.set(sku, url);
+      });
+    }catch(e){ console.warn("images.csv not loaded:", e.message); IMG_MAP.clear(); }
+  }
+  async function fetchDetailsMap(){
+    try{
+      const csvTxt = await fetchText(DETAILS_CSV_URL);
+      const parsed = Papa.parse(csvTxt, { header:true, skipEmptyLines:false });
+      DETAIL_MAP.clear();
+      (parsed.data||[]).forEach(row=>{
+        const sku=(row.sku||"").trim();
+        if(!sku) return;
+        DETAIL_MAP.set(sku, {
+          tech: (row.tech||"").trim(),
+          log: (row.log||"").trim(),
+          marketing: (row.marketing||"").trim(),
+          add: (row.add||"").trim()
         });
-      }catch(e){ console.warn("images.csv not loaded:", e.message); IMG_MAP.clear(); }
-    }
-    async function fetchDetailsMap(){
-      try{
-        const csvTxt = await fetchText(DETAILS_CSV_URL);
-        const parsed = Papa.parse(csvTxt, { header:true, skipEmptyLines:false });
-        DETAIL_MAP.clear();
-        (parsed.data||[]).forEach(row=>{
-          const sku=(row.sku||"").trim();
-          if(!sku) return;
-          DETAIL_MAP.set(sku, {
-            tech: (row.tech||"").trim(),
-            log: (row.log||"").trim(),
-            marketing: (row.marketing||"").trim(),
-            add: (row.add||"").trim()
-          });
-        });
-      }catch(e){ console.warn("add_data.csv not loaded:", e.message); DETAIL_MAP.clear(); }
-    }
-
+      });
+    }catch(e){ console.warn("add_data.csv not loaded:", e.message); DETAIL_MAP.clear(); }
+  }
     // Parse XML
-    function parseOffers(xml){
-      const offers = getByLocalName(xml, "offer").map(offer=>{
-        const sku = offer.getAttribute("sku") || "";
-        const model = (firstByLocalName(offer, "model")?.textContent || "").trim();
-        const modelLC = model.toLowerCase();
-        const av = firstByLocalName(offer, "availability");
-        const stock = Number(av?.getAttribute("stockCount") || "0");
-        const price = Number((firstByLocalName(offer, "price")?.textContent || "0").replace(/[^\d]/g,""));
-        return { sku, model, modelLC, stock, price };
-      });
-      return offers;
+  function parseOffers(xml){
+    const offers = getByLocalName(xml, "offer").map(offer=>{
+      const sku = offer.getAttribute("sku") || "";
+      const model = (firstByLocalName(offer, "model")?.textContent || "").trim();
+      const modelLC = model.toLowerCase();
+      const av = firstByLocalName(offer, "availability");
+      const stock = Number(av?.getAttribute("stockCount") || "0");
+      const price = Number((firstByLocalName(offer, "price")?.textContent || "0").replace(/[^\d]/g,""));
+      return { sku, model, modelLC, stock, price };
+    });
+    return offers;
+  }
+
+  // Sorting & filtering
+  function sortOffers(arr){
+    switch (sortKey.value){
+      case "price_desc": return arr.slice().sort((a,b)=> b.price - a.price);
+      case "price_asc":  return arr.slice().sort((a,b)=> a.price - b.price);
+      case "stock_desc": return arr.slice().sort((a,b)=> b.stock - a.stock);
+      case "stock_asc":  return arr.slice().sort((a,b)=> a.stock - b.stock);
+      default:           return arr.slice().sort((a,b)=> (b.stock-a.stock) || a.model.localeCompare(b.model));
     }
+  }
+  function currentFiltered(){
+    const term = q.value.trim().toLowerCase();
+    return OFFERS.filter(o=>{
+      const hit = o.sku.includes(term) || o.modelLC.includes(term);
+      return hit && (!onlyInStock.checked || o.stock>0);
+    });
+  }
 
-    // Sorting & filtering
-    function sortOffers(arr){
-      switch (sortKey.value){
-        case "price_desc": return arr.slice().sort((a,b)=> b.price - a.price);
-        case "price_asc":  return arr.slice().sort((a,b)=> a.price - b.price);
-        case "stock_desc": return arr.slice().sort((a,b)=> b.stock - a.stock);
-        case "stock_asc":  return arr.slice().sort((a,b)=> a.stock - b.stock);
-        default:           return arr.slice().sort((a,b)=> (b.stock-a.stock) || a.model.localeCompare(b.model));
-      }
-    }
-    function currentFiltered(){
-      const term = q.value.trim().toLowerCase();
-      return OFFERS.filter(o=>{
-        const hit = o.sku.includes(term) || o.modelLC.includes(term);
-        return hit && (!onlyInStock.checked || o.stock>0);
-      });
-    }
+  // Rendering: LIST
+  function renderList(){
+    viewList.hidden=false; viewDetail.hidden=true;
+    const data = sortOffers(currentFiltered());
+    list.innerHTML="";
+    if(!data.length){
+      list.innerHTML = `<div class="card"><div class="model">Ничего не найдено. Попробуйте другой артикул или модель.</div></div>`;
+    }else{
+      const imgsOn = showImages.checked;
+      const frag = document.createDocumentFragment();
+      for(const o of data){
+        const {label, cls} = stockBucket(o.stock);
+        const imgUrl = IMG_MAP.get(o.sku) || "";
+        const hasDetails = DETAIL_MAP.has(o.sku);
 
-    // Rendering: LIST
-    function renderList(){
-      viewList.hidden=false; viewDetail.hidden=true;
-      const data = sortOffers(currentFiltered());
-      list.innerHTML="";
-      if(!data.length){
-        list.innerHTML = `<div class="card"><div class="model">Ничего не найдено. Попробуйте другой артикул или модель.</div></div>`;
-      }else{
-        const imgsOn = showImages.checked;
-        const frag = document.createDocumentFragment();
-        for(const o of data){
-          const {label, cls} = stockBucket(o.stock);
-          const imgUrl = IMG_MAP.get(o.sku) || "";
-          const hasDetails = DETAIL_MAP.has(o.sku);
+        const card = document.createElement("div");
+        card.className = "card";
+        if (o.stock === 0) card.classList.add("oos");
 
-          const card = document.createElement("div");
-          card.className = "card";
-          if (o.stock === 0) card.classList.add("oos");
-
-          card.innerHTML = `
-            <div class="row1">
-              <div class="sku">Артикул: ${o.sku}</div>
-              <span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>
+        card.innerHTML = `
+          <div class="row1">
+            <div class="sku">Артикул: ${o.sku}</div>
+            <span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>
+          </div>
+          <div class="model">${o.model}</div>
+          <div class="micro">
+            ${hasDetails ? `
+              <a href="#sku=${encodeURIComponent(o.sku)}">Подробнее</a>
+              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=tech">Тех</a>
+              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=log">Лог</a>
+              · <a href="#sku=${encodeURIComponent(o.sku)}&tab=marketing">Маркетинг</a>
+            ` : `<span style="color:#6b7280">Описание отсутствует</span>`}
+          </div>
+          <div class="meta">
+            <div class="leftMeta">
+              ${imgUrl && imgsOn ? `<img class="thumb" loading="lazy" src="${imgUrl}" alt="${o.model}">` : ``}
             </div>
-            <div class="model">${o.model}</div>
-            <div class="micro">
-              ${hasDetails ? `
-                <a href="#sku=${encodeURIComponent(o.sku)}">Подробнее</a>
-                · <a href="#sku=${encodeURIComponent(o.sku)}&tab=tech">Тех</a>
-                · <a href="#sku=${encodeURIComponent(o.sku)}&tab=log">Лог</a>
-                · <a href="#sku=${encodeURIComponent(o.sku)}&tab=marketing">Маркетинг</a>
-              ` : `<span style="color:#6b7280">Описание отсутствует</span>`}
-            </div>
-            <div class="meta">
-              <div class="leftMeta">
-                ${imgUrl && imgsOn ? `<img class="thumb" loading="lazy" src="${imgUrl}" alt="${o.model}">` : ``}
-              </div>
-              <div class="price">${formatTenge(o.price)}</div>
-            </div>
-          `;
-          if (imgUrl && imgsOn){
-            const img = card.querySelector(".thumb");
-            img?.addEventListener("click", ()=>{ lightboxImg.src = imgUrl; lightbox.style.display='flex'; });
-          }
-          frag.appendChild(card);
+            <div class="price">${formatTenge(o.price)}</div>
+          </div>
+        `;
+        if (imgUrl && imgsOn){
+          const img = card.querySelector(".thumb");
+          img?.addEventListener("click", ()=>{ lightboxImg.src = imgUrl; lightbox.style.display='flex'; });
         }
-        list.appendChild(frag);
+        frag.appendChild(card);
       }
-      stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}${showImages.checked?"":" • изображения скрыты"}`;
+      list.appendChild(frag);
     }
+    stats.textContent = `Показано ${data.length} / ${OFFERS.length} ${onlyInStock.checked?"(только в наличии)":""}${showImages.checked?"":" • изображения скрыты"}`;
+  }
 
-    // Sanitize bullets
-    function sanitizeBullets(addStr){
-      return (addStr||"")
-        .split(/\r?\n|[|;]+/g)
-        .map(s=>s.trim())
-        .filter(Boolean);
-    }
+  // Sanitize bullets
+  function sanitizeBullets(addStr){
+    return (addStr||"")
+      .split(/\r?\n|[|;]+/g)
+      .map(s=>s.trim())
+      .filter(Boolean);
+  }
 
-    // Rendering: DETAIL
-    function renderDetail(sku, tab="details"){
-      viewList.hidden=true; viewDetail.hidden=false;
+  // Rendering: DETAIL
+  function renderDetail(sku, tab="details"){
+    viewList.hidden=true; viewDetail.hidden=false;
 
-      const o = OFFERS.find(x=>x.sku===sku);
-      const d = DETAIL_MAP.get(sku) || {tech:"",log:"",marketing:"",add:""};
-      const imgUrl = IMG_MAP.get(sku) || "";
-      const {label, cls} = o ? stockBucket(o.stock) : {label:"", cls:""};
+    const o = OFFERS.find(x=>x.sku===sku);
+    const d = DETAIL_MAP.get(sku) || {tech:"",log:"",marketing:"",add:""};
+    const imgUrl = IMG_MAP.get(sku) || "";
+    const {label, cls} = o ? stockBucket(o.stock) : {label:"", cls:""};
 
-      detailHead.className = "head" + ((o && o.stock===0) ? " oos" : "");
-      detailHead.innerHTML = `
-        <div class="hrow">
-          <div class="title1">${o ? `Артикул: ${o.sku}` : sku}</div>
-          ${label ? `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>` : ""}
-        </div>
-        <div class="hrow">
-          <div>${o ? o.model : ""}</div>
-          <div class="price">${o ? formatTenge(o.price) : ""}</div>
-        </div>
-        <div class="hero">
-          ${imgUrl ? `<img id="heroImg" loading="lazy" src="${imgUrl}" alt="${o?o.model:""}">` : ""}
-        </div>
-      `;
-      const heroImg = document.getElementById("heroImg");
-      if (heroImg) heroImg.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
+    detailHead.className = "head" + ((o && o.stock===0) ? " oos" : "");
+    detailHead.innerHTML = `
+      <div class="hrow">
+        <div class="title1">${o ? `Артикул: ${o.sku}` : sku}</div>
+        ${label ? `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>` : ""}
+      </div>
+      <div class="hrow">
+        <div>${o ? o.model : ""}</div>
+        <div class="price">${o ? formatTenge(o.price) : ""}</div>
+      </div>
+      <div class="hero">
+        ${imgUrl ? `<img id="heroImg" loading="lazy" src="${imgUrl}" alt="${o?o.model:""}">` : ""}
+      </div>
+    `;
+    const heroImg = document.getElementById("heroImg");
+    if (heroImg) heroImg.addEventListener("click", ()=>{ lightboxImg.src=imgUrl; lightbox.style.display='flex'; });
 
-      const tabs = [
-        {id:"details", label:"Подробнее"},
-        {id:"tech", label:"Тех"},
-        {id:"log", label:"Лог"},
-        {id:"marketing", label:"Маркетинг"}
-      ];
-      tabsEl.innerHTML = "";
-      tabs.forEach(t=>{
-        const b=document.createElement("button");
-        b.className="tabbtn" + (t.id===tab?" active":"");
-        b.textContent=t.label;
-        b.addEventListener("click", ()=>{
-          const base = `#sku=${encodeURIComponent(sku)}`;
-          location.replace(t.id==="details" ? base : `${base}&tab=${t.id}`);
-        });
-        tabsEl.appendChild(b);
+    const tabs = [
+      {id:"details", label:"Подробнее"},
+      {id:"tech", label:"Тех"},
+      {id:"log", label:"Лог"},
+      {id:"marketing", label:"Маркетинг"}
+    ];
+    tabsEl.innerHTML = "";
+    tabs.forEach(t=>{
+      const b=document.createElement("button");
+      b.className="tabbtn" + (t.id===tab?" active":"");
+      b.textContent=t.label;
+      b.addEventListener("click", ()=>{
+        const base = `#sku=${encodeURIComponent(sku)}`;
+        location.replace(t.id==="details" ? base : `${base}&tab=${t.id}`);
       });
-
-      let html = "";
-      if (tab==="details"){
-        const bullets = sanitizeBullets(d.add);
-        html += bullets.length
-          ? `<div class="block"><ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul></div>`
-          : `<div class="muted" style="color:#6b7280">Нет кратких пунктов</div>`;
-      }
-      if (tab==="tech"){
-        html += d.tech ? `<div class="block"><pre>${d.tech}</pre></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
-      }
-      if (tab==="log"){
-        html += d.log ? `<div class="block"><pre>${d.log}</pre></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
-      }
-      if (tab==="marketing"){
-        html += d.marketing ? `<div class="block" style="background:var(--bg);border-color:#e5e7eb"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
-      }
-      tabpanel.innerHTML = html;
-    }
-
-    // Exports
-    function exportExcel(rows){
-      const out = rows.map(o=>{
-        const b = stockBucket(o.stock);
-        const d = DETAIL_MAP.get(o.sku) || {};
-        return { Артикул:o.sku, Модель:o.model, Индикатор:b.label, Цена:o.price,
-                 Изображение: IMG_MAP.get(o.sku)||"", Тех:d.tech||"", Лог:d.log||"",
-                 Маркетинг:d.marketing||"", Подробнее:d.add||"" };
-      });
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(out);
-      ws["!cols"] = [{wch:12},{wch:50},{wch:14},{wch:12},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40}];
-      XLSX.utils.book_append_sheet(wb, ws, "Прайс");
-      XLSX.writeFile(wb, "einhell_price_public.xlsx");
-    }
-    function exportCSV(rows){
-      const header = ["Артикул","Модель","Индикатор","Цена","Изображение","Тех","Лог","Маркетинг","Подробнее"];
-      const lines = [header.map(escCSV).join(",")];
-      for(const o of rows){
-        const b = stockBucket(o.stock);
-        const d = DETAIL_MAP.get(o.sku) || {};
-        lines.push([
-          o.sku, o.model, b.label, o.price, IMG_MAP.get(o.sku)||"", d.tech||"", d.log||"", d.marketing||"", d.add||""
-        ].map(escCSV).join(","));
-      }
-      downloadBlob("einhell_price_public.csv", "text/csv;charset=utf-8", lines.join("\n"));
-    }
-    function exportJSON(rows){
-      const arr = rows.map(o=>{
-        const b = stockBucket(o.stock);
-        const d = DETAIL_MAP.get(o.sku) || {};
-        return { sku:o.sku, model:o.model, indicator:b.label, price:o.price,
-                 image: IMG_MAP.get(o.sku)||null, tech:d.tech||"", log:d.log||"",
-                 marketing:d.marketing||"", details:d.add||"" };
-      });
-      downloadBlob("einhell_price_public.json", "application/json;charset=utf-8", JSON.stringify(arr, null, 2));
-    }
-    function exportXML(rows){
-      const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-      let xml = `<?xml version="1.0" encoding="UTF-8"?><items>`;
-      for(const o of rows){
-        const b = stockBucket(o.stock);
-        const d = DETAIL_MAP.get(o.sku) || {};
-        const img = IMG_MAP.get(o.sku)||"";
-        xml += `<item sku="${esc(o.sku)}"><model>${esc(o.model)}</model><indicator>${esc(b.label)}</indicator><price>${o.price}</price>${img?`<image>${esc(img)}</image>`:""}<tech>${esc(d.tech||"")}</tech><log>${esc(d.log||"")}</log><marketing>${esc(d.marketing||"")}</marketing><details>${esc(d.add||"")}</details></item>`;
-      }
-      xml += `</items>`;
-      downloadBlob("einhell_price_public.xml", "application/xml;charset=utf-8", xml);
-    }
-
-    // Router
-    function parseHash(){
-      const h = location.hash.replace(/^#/,"");
-      if (h.includes("sku=")){
-        const sp = new URLSearchParams(h);
-        return { sku: sp.get("sku"), tab: (sp.get("tab")||"details") };
-      }
-      return { sku:null, tab:null };
-    }
-    function renderRoute(){
-      const {sku, tab} = parseHash();
-      if (sku){ renderDetail(sku, tab||"details"); } else { renderList(); }
-    }
-
-    // Init
-    async function init(){
-      try{
-        stats.textContent="Загрузка…";
-        await Promise.all([fetchImagesMap(), fetchDetailsMap()]);
-        const xml = await fetchXML();
-        OFFERS = parseOffers(xml);
-        if (OFFERS.length === 0) throw new Error("Parsed 0 offers (namespace?)");
-        footer.textContent = "Обновлено: " + new Date().toLocaleString();
-        errorBox.hidden = true;
-        renderRoute();
-      }catch(err){
-        console.error(err);
-        errorBox.hidden = false;
-        errorBox.textContent = "Не удалось загрузить: " + err.message;
-        stats.textContent = "—";
-      }
-    }
-
-    // Events
-    q.addEventListener("input",debounce(()=>{ if(!location.hash) renderList(); },220));
-    onlyInStock.addEventListener("change",()=>{ if(!location.hash) renderList(); });
-    showImages.addEventListener("change",()=>{ if(!location.hash) renderList(); });
-    sortKey.addEventListener("change",()=>{ if(!location.hash) renderList(); });
-    clearBtn.addEventListener("click",()=>{ q.value=""; if(!location.hash) { renderList(); q.focus(); } });
-
-    btnDownload.addEventListener("click", ()=>{
-      const rows = sortOffers(currentFiltered());
-      switch(downloadFmt.value){
-        case "xlsx": return exportExcel(rows);
-        case "csv":  return exportCSV(rows);
-        case "json": return exportJSON(rows);
-        case "xml":  return exportXML(rows);
-      }
+      tabsEl.appendChild(b);
     });
 
-    btnBack.addEventListener("click", ()=>{
-      location.replace("#");
-      renderList();
+    let html = "";
+    if (tab==="details"){
+      const bullets = sanitizeBullets(d.add);
+      html += bullets.length
+        ? `<div class="block"><ul class="bullets">${bullets.map(x=>`<li>${x}</li>`).join("")}</ul></div>`
+        : `<div class="muted" style="color:#6b7280">Нет кратких пунктов</div>`;
+    }
+    if (tab==="tech"){
+      html += d.tech ? `<div class="block"><pre>${d.tech}</pre></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
+    }
+    if (tab==="log"){
+      html += d.log ? `<div class="block"><pre>${d.log}</pre></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
+    }
+    if (tab==="marketing"){
+      html += d.marketing ? `<div class="block" style="background:var(--bg);border-color:#e5e7eb"><div style="white-space:pre-wrap;margin:0">${d.marketing}</div></div>` : `<div class="muted" style="color:#6b7280">Нет данных</div>`;
+    }
+    tabpanel.innerHTML = html;
+  }
+
+  // ==== EXPORTS (Excel, CSV, JSON, XML) ====
+  function exportExcel(rows){
+    const out = rows.map(o=>{
+      const b = stockBucket(o.stock);
+      const d = DETAIL_MAP.get(o.sku) || {};
+      return { Артикул:o.sku, Модель:o.model, Индикатор:b.label, Цена:o.price,
+               Изображение: IMG_MAP.get(o.sku)||"", Тех:d.tech||"", Лог:d.log||"",
+               Маркетинг:d.marketing||"", Подробнее:d.add||"" };
     });
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(out);
+    ws["!cols"] = [{wch:12},{wch:50},{wch:14},{wch:12},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40}];
+    XLSX.utils.book_append_sheet(wb, ws, "Прайс");
+    XLSX.writeFile(wb, "einhell_price_public.xlsx");
+  }
+  function exportCSV(rows){
+    const header = ["Артикул","Модель","Индикатор","Цена","Изображение","Тех","Лог","Маркетинг","Подробнее"];
+    const lines = [header.map(escCSV).join(",")];
+    for(const o of rows){
+      const b = stockBucket(o.stock);
+      const d = DETAIL_MAP.get(o.sku) || {};
+      lines.push([
+        o.sku, o.model, b.label, o.price, IMG_MAP.get(o.sku)||"", d.tech||"", d.log||"", d.marketing||"", d.add||""
+      ].map(escCSV).join(","));
+    }
+    downloadBlob("einhell_price_public.csv", "text/csv;charset=utf-8", lines.join("\n"));
+  }
+  function exportJSON(rows){
+    const arr = rows.map(o=>{
+      const b = stockBucket(o.stock);
+      const d = DETAIL_MAP.get(o.sku) || {};
+      return { sku:o.sku, model:o.model, indicator:b.label, price:o.price,
+               image: IMG_MAP.get(o.sku)||null, tech:d.tech||"", log:d.log||"",
+               marketing:d.marketing||"", details:d.add||"" };
+    });
+    downloadBlob("einhell_price_public.json", "application/json;charset=utf-8", JSON.stringify(arr, null, 2));
+  }
+  function exportXML(rows){
+    const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    let xml = `<?xml version="1.0" encoding="UTF-8"?><items>`;
+    for(const o of rows){
+      const b = stockBucket(o.stock);
+      const d = DETAIL_MAP.get(o.sku) || {};
+      const img = IMG_MAP.get(o.sku)||"";
+      xml += `<item sku="${esc(o.sku)}"><model>${esc(o.model)}</model><indicator>${esc(b.label)}</indicator><price>${o.price}</price>${img?`<image>${esc(img)}</image>`:""}<tech>${esc(d.tech||"")}</tech><log>${esc(d.log||"")}</log><marketing>${esc(d.marketing||"")}</marketing><details>${esc(d.add||"")}</details></item>`;
+    }
+    xml += `</items>`;
+    downloadBlob("einhell_price_public.xml", "application/xml;charset=utf-8", xml);
+  }
 
-    window.addEventListener("hashchange", renderRoute);
+  // Router
+  function parseHash(){
+    const h = location.hash.replace(/^#/,"");
+    if (h.includes("sku=")){
+      const sp = new URLSearchParams(h);
+      return { sku: sp.get("sku"), tab: (sp.get("tab")||"details") };
+    }
+    return { sku:null, tab:null };
+  }
+  function renderRoute(){
+    const {sku, tab} = parseHash();
+    if (sku){ renderDetail(sku, tab||"details"); } else { renderList(); }
+  }
 
-    setInterval(init,30*60*1000);
-    init();
-  </script>
+  // Init
+  async function init(){
+    try{
+      stats.textContent="Загрузка…";
+      await Promise.all([fetchImagesMap(), fetchDetailsMap()]);
+      const xml = await fetchXML();
+      OFFERS = parseOffers(xml);
+      if (OFFERS.length === 0) throw new Error("Parsed 0 offers (namespace?)");
+      footer.textContent = "Обновлено: " + new Date().toLocaleString();
+      errorBox.hidden = true;
+      renderRoute();
+    }catch(err){
+      console.error(err);
+      errorBox.hidden = false;
+      errorBox.textContent = "Не удалось загрузить: " + err.message;
+      stats.textContent = "—";
+    }
+  }
+
+  // Events
+  q.addEventListener("input",debounce(()=>{ if(!location.hash) renderList(); },220));
+  onlyInStock.addEventListener("change",()=>{ if(!location.hash) renderList(); });
+  showImages.addEventListener("change",()=>{ if(!location.hash) renderList(); });
+  sortKey.addEventListener("change",()=>{ if(!location.hash) renderList(); });
+  clearBtn.addEventListener("click",()=>{ q.value=""; if(!location.hash) { renderList(); q.focus(); } });
+
+  btnDownload.addEventListener("click", ()=>{
+    const rows = sortOffers(currentFiltered());
+    switch(downloadFmt.value){
+      case "xlsx": return exportExcel(rows);
+      case "csv":  return exportCSV(rows);
+      case "json": return exportJSON(rows);
+      case "xml":  return exportXML(rows);
+    }
+  });
+
+  btnBack.addEventListener("click", ()=>{
+    location.replace("#");
+    renderList();
+  });
+
+  window.addEventListener("hashchange", renderRoute);
+
+  setInterval(init,30*60*1000);
+  init();
+</script>
 </body>
 </html>
-  
