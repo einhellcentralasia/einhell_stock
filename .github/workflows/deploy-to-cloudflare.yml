@@ -1,0 +1,131 @@
+name: Deploy einhell_stock to Cloudflare Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - 'images.csv'
+      - 'add_data.csv'
+      - 'logo.png'
+      - 'public/**'
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-einhell-stock-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      private_changed: ${{ steps.filter.outputs.private }}
+      public_changed:  ${{ steps.filter.outputs.public }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Decide what to deploy:
+      # - private changes on root files (index.html, data, logo)
+      # - public changes on any public/** OR (because public uses the same data/logo) the shared root data/logo files
+      - name: Paths filter
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          base: ${{ github.event.before }}
+          filters: |
+            private:
+              - 'index.html'
+              - 'images.csv'
+              - 'add_data.csv'
+              - 'logo.png'
+            public:
+              - 'public/**'
+              - 'images.csv'
+              - 'add_data.csv'
+              - 'logo.png'
+
+  deploy-private:
+    needs: detect
+    if: needs.detect.outputs.private_changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      CF_PROJECT_NAME: ${{ secrets.CF_PROJECT_STOCK }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage site (private)
+        run: |
+          set -euo pipefail
+          mkdir -p dist_private
+          cp -f index.html dist_private/ || true
+          cp -f images.csv dist_private/ || true
+          cp -f add_data.csv dist_private/ || true
+          cp -f logo.png dist_private/ || true
+          echo "Staged files:"
+          ls -la dist_private
+
+      - name: Install Wrangler v3
+        run: npm i -g wrangler@3
+
+      - name: Deploy (private -> einhell-stock.pages.dev)
+        run: wrangler pages deploy dist_private --project-name="$CF_PROJECT_NAME" --branch=main
+
+      - name: Verify URL
+        run: |
+          set -euo pipefail
+          URL="https://einhell-stock.pages.dev/"
+          echo "Check $URL"
+          for i in {1..10}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$URL" || true)
+            if [ "$code" = "200" ]; then echo "OK $code"; exit 0; fi
+            echo "Not ready ($code). Retry $i/10"; sleep 6
+          done
+          echo "Site not reachable"; exit 1
+
+  deploy-public:
+    needs: detect
+    if: needs.detect.outputs.public_changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      CF_PROJECT_NAME: ${{ secrets.CF_PROJECT_PUBLIC }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage site (public)
+        run: |
+          set -euo pipefail
+          mkdir -p dist_public
+          # copy everything under public/ (HTML, assets)
+          rsync -a --delete public/ dist_public/
+          # also copy shared data/logo so "./images.csv" etc. keep working
+          cp -f images.csv dist_public/ || true
+          cp -f add_data.csv dist_public/ || true
+          cp -f logo.png dist_public/ || true
+          echo "Staged files:"
+          ls -la dist_public
+
+      - name: Install Wrangler v3
+        run: npm i -g wrangler@3
+
+      - name: Deploy (public -> einhell-stock-public.pages.dev)
+        run: wrangler pages deploy dist_public --project-name="$CF_PROJECT_NAME" --branch=main
+
+      - name: Verify URL
+        run: |
+          set -euo pipefail
+          URL="https://einhell-stock-public.pages.dev/"
+          echo "Check $URL"
+          for i in {1..10}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$URL" || true)
+            if [ "$code" = "200" ]; then echo "OK $code"; exit 0; fi
+            echo "Not ready ($code). Retry $i/10"; sleep 6
+          done
+          echo "Site not reachable"; exit 1
